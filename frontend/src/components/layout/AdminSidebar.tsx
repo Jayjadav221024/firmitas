@@ -64,15 +64,15 @@ export const AdminSidebar: React.FC = () => {
       {/* Workspace Header */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-[#1a1f2c]">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-teal-900/30 flex-shrink-0">
-            ST
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-base shadow-md shadow-teal-900/30 flex-shrink-0">
+            F1
           </div>
           {!isSidebarCollapsed && (
             <div className="truncate">
               <h1 className="text-sm font-semibold text-white tracking-wide truncate">
-                Shreeraj Traders
+                Firmitas 1
               </h1>
-              <p className="text-xs text-slate-400 truncate">Admin console</p>
+              <p className="text-xs text-slate-400 truncate">Pharma CMS & Admin</p>
             </div>
           )}
         </div>

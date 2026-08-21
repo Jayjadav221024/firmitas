@@ -11,7 +11,8 @@ import {
   initialJobOpenings,
   initialJobApplications,
   initialUsers,
-  initialRoles
+  initialRoles,
+  initialWebsiteSections
 } from '../services/adminDataService';
 
 const rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').trim().replace(/\/+$/, '');

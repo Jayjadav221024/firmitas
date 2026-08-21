@@ -1,11 +1,12 @@
-import { productsData, categories } from '../data/products';
-import { faqs } from '../data/faqs';
+// Single source of persistent mock database for Firmitas Admin Console
+import { productsData } from '../data/products';
+import { faqsData } from '../data/faqs';
+import { company } from '../data/company';
 
-// Storage helper with fallback
-const initStorage = (key: string, defaultData: any) => {
-  const existing = localStorage.getItem(`shreeraj_admin_${key}`);
+export const getAdminData = (key: string, defaultData: any = []) => {
+  const existing = localStorage.getItem(`firmitas_admin_${key}`) || localStorage.getItem(`shreeraj_admin_${key}`);
   if (!existing) {
-    localStorage.setItem(`shreeraj_admin_${key}`, JSON.stringify(defaultData));
+    localStorage.setItem(`firmitas_admin_${key}`, JSON.stringify(defaultData));
     return defaultData;
   }
   try {
@@ -16,528 +17,750 @@ const initStorage = (key: string, defaultData: any) => {
 };
 
 export const setStorage = (key: string, data: any) => {
-  localStorage.setItem(`shreeraj_admin_${key}`, JSON.stringify(data));
+  localStorage.setItem(`firmitas_admin_${key}`, JSON.stringify(data));
 };
 
-export const getStorage = (key: string) => {
-  const existing = localStorage.getItem(`shreeraj_admin_${key}`);
-  return existing ? JSON.parse(existing) : null;
+export const clearAdminStorage = () => {
+  const keys = ['products', 'categories', 'faqs', 'testimonials', 'blogs', 'inquiries', 'job-openings', 'job-applications', 'users', 'roles', 'website-sections'];
+  keys.forEach(k => {
+    localStorage.removeItem(`firmitas_admin_${k}`);
+    localStorage.removeItem(`shreeraj_admin_${k}`);
+  });
 };
 
-// Shreeraj Traders Products Catalog
-export const initialProducts = [
+// Firmitas Real Products Catalog
+export const initialProducts = productsData.map((p, idx) => ({
+  id: p.id || `prod-${idx + 1}`,
+  _id: p.id || `prod-${idx + 1}`,
+  srNo: idx + 1,
+  name: p.name,
+  slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+  brandName: 'Firmitas Healthcare',
+  categoryKey: p.category,
+  categoryName: p.category === 'ethical' ? 'Ethical & Generics' : p.category === 'surgical' ? 'Surgical & Hospital Supplies' : p.category === 'otc' ? 'OTC Products' : 'Critical Care',
+  composition: p.composition || '',
+  form: p.form || 'Tablet',
+  rxType: p.rxType || 'Rx',
+  packaging: p.packaging || 'Standard Packaging',
+  storage: p.storage || 'Store in cool and dry place',
+  therapeuticUse: p.use || '',
+  dosage: 'As directed by physician',
+  shortDescription: p.use || p.composition || '',
+  description: `${p.name} (${p.composition || ''}) supplied by Firmitas 1 Pharma Solutions. ${p.use || ''} Standard packaging: ${p.packaging}.`,
+  metaTitle: `${p.name} Supplier & Distributor - Firmitas 1`,
+  metaDescription: `Wholesale supplier and bulk distributor of ${p.name} (${p.composition || ''}) with guaranteed batch compliance and cold-chain integrity.`,
+  keywords: `${p.name}, ${p.category}, Firmitas pharma, bulk medicine supplier`,
+  images: [
+    'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop&q=80'
+  ],
+  pdfBrochure: '',
+  coaAvailable: true,
+  status: 'active',
+  createdAt: new Date().toISOString()
+}));
+
+// Firmitas 4 Divisions / Categories
+export const initialCategories = [
   {
-    id: 'prod-1',
-    srNo: 1,
-    name: 'Low Voltage Control Product',
-    brandName: 'Siemens',
-    categoryKey: 'switchgears',
-    slug: 'low-voltage-control-product',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-    description: 'Siemens Sirius Low Voltage industrial control components for power distribution and machinery safety.',
-    metaTitle: 'Siemens Low Voltage Control Product - Shreeraj Traders',
-    metaDescription: 'Authorized Siemens Low Voltage Control distributor in Ahmedabad.'
+    id: 'ethical',
+    _id: 'ethical',
+    key: 'ethical',
+    name: 'Ethical & Generics',
+    slug: 'ethical-generics',
+    displayOrder: 1,
+    tagline: 'Prescription formulations and bioequivalent generics across major therapeutic segments.',
+    shortDescription: 'Supplying hospitals, retail chains and institutional pharmacies with certified prescription drugs.',
+    metaTitle: 'Ethical & Generic Pharmaceuticals Distributor - Firmitas 1',
+    metaDescription: 'Bulk distributor of high quality ethical and generic medicines with full CoA and regulatory compliance.',
+    isActive: true,
+    productCount: productsData.filter(p => p.category === 'ethical').length
   },
   {
-    id: 'prod-2',
-    srNo: 2,
-    name: 'MCB',
-    brandName: 'Siemens',
-    categoryKey: 'switchgears',
-    slug: 'mcb',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200',
-    description: 'High reliability miniature circuit breaker with instant trip mechanism and thermal protection.',
-    metaTitle: 'Siemens MCB Switches - Shreeraj Traders',
-    metaDescription: 'Top grade Siemens MCB miniature circuit breakers.'
+    id: 'surgical',
+    _id: 'surgical',
+    key: 'surgical',
+    name: 'Surgical & Hospital Supplies',
+    slug: 'surgical-hospital-supplies',
+    displayOrder: 2,
+    tagline: 'Disposables, surgical consumables, PPE and hospital ward equipment.',
+    shortDescription: 'Sterile disposables, wound care, cannulas, gloves and essential clinical consumables.',
+    metaTitle: 'Surgical & Hospital Consumables Supplier - Firmitas 1',
+    metaDescription: 'Complete surgical disposables and hospital equipment supplier for clinics, nursing homes and hospitals.',
+    isActive: true,
+    productCount: productsData.filter(p => p.category === 'surgical').length
   },
   {
-    id: 'prod-3',
-    srNo: 3,
-    name: 'Sinnova',
-    brandName: 'Siemens',
-    categoryKey: 'switchgears',
-    slug: 'sinnova',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=200',
-    description: 'Siemens Sinnova range offering premium modular switchgear and electrical protection.',
-    metaTitle: 'Siemens Sinnova Switchgear - Shreeraj Traders',
-    metaDescription: 'Sinnova modular electrical switchgear.'
+    id: 'otc',
+    _id: 'otc',
+    key: 'otc',
+    name: 'OTC Products',
+    slug: 'otc-products',
+    displayOrder: 3,
+    tagline: 'Over-the-counter lines, vitamins, wellness supplements and digestive care.',
+    shortDescription: 'High-demand consumer healthcare formulations and retail pharmacy shelf lines.',
+    metaTitle: 'OTC & Wellness Health Products Distributor - Firmitas 1',
+    metaDescription: 'Wholesale distributor of OTC products, vitamins, rehydration salts, and daily wellness items.',
+    isActive: true,
+    productCount: productsData.filter(p => p.category === 'otc').length
   },
   {
-    id: 'prod-4',
-    srNo: 4,
-    name: 'Siemens Motor',
-    brandName: 'Siemens',
-    categoryKey: 'motors',
-    slug: 'siemens-motor',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=200',
-    description: 'Energy efficient 3-phase AC induction motors for severe duty industrial applications.',
-    metaTitle: 'Siemens Electric Motors - Shreeraj Traders',
-    metaDescription: 'IE2, IE3, and IE4 high efficiency Siemens motors.'
-  },
-  {
-    id: 'prod-5',
-    srNo: 5,
-    name: 'Hindustan Electric Motor',
-    brandName: 'Hindustan Electric',
-    categoryKey: 'motors',
-    slug: 'hindustan-electric-motor',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=200',
-    description: 'Heavy duty Hindustan Electric motors engineered for Indian industrial conditions.',
-    metaTitle: 'Hindustan Electric Motors Supplier - Shreeraj Traders',
-    metaDescription: 'Durable Hindustan Electric 3-phase induction motors.'
-  },
-  {
-    id: 'prod-6',
-    srNo: 6,
-    name: 'Checkered Plate',
-    brandName: 'Shree Raj Traders',
-    categoryKey: 'frp-gratings',
-    slug: 'cheker-plate',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200',
-    description: 'High-strength anti-skid FRP checkered plate for walkway flooring and chemical environments.',
-    metaTitle: 'FRP Checkered Plate - Shreeraj Traders',
-    metaDescription: 'Corrosion-resistant FRP checkered plate.'
-  },
-  {
-    id: 'prod-7',
-    srNo: 7,
-    name: 'Ladder Type Cable Tray',
-    brandName: 'Shree Raj Traders',
-    categoryKey: 'frp-cable-trays',
-    slug: 'ladder-type-cable-tray',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=200',
-    description: 'FRP Ladder type cable management trays engineered for heavy cable loading and aggressive atmospheres.',
-    metaTitle: 'Ladder Type FRP Cable Tray - Shreeraj Traders',
-    metaDescription: 'Heavy-duty fiberglass ladder cable trays.'
-  },
-  {
-    id: 'prod-8',
-    srNo: 8,
-    name: 'Crompton Greaves Motor',
-    brandName: 'CGL (Crompton Greaves)',
-    categoryKey: 'motors',
-    slug: 'crompton-greaves-motor',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-    description: 'Crompton Greaves energy efficient motors for pumps, blowers, and manufacturing plants.',
-    metaTitle: 'Crompton Greaves Motor - Shreeraj Traders',
-    metaDescription: 'CGL high efficiency motors distributor.'
-  },
-  {
-    id: 'prod-9',
-    srNo: 9,
-    name: 'Grit Top',
-    brandName: 'Shree Raj Traders',
-    categoryKey: 'frp-gratings',
-    slug: 'grit-top',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200',
-    description: 'Molded FRP grating with quartz grit anti-slip surface for offshore and oil & gas facilities.',
-    metaTitle: 'FRP Grit Top Grating - Shreeraj Traders',
-    metaDescription: 'Grit top non-slip composite grating.'
-  },
-  {
-    id: 'prod-10',
-    srNo: 10,
-    name: 'Perforated Cable Tray',
-    brandName: 'Shree Raj Traders',
-    categoryKey: 'frp-cable-trays',
-    slug: 'perforated-cable-tray',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=200',
-    description: 'Fiberglass reinforced polymer perforated trays for power and telecommunication cabling.',
-    metaTitle: 'Perforated FRP Cable Tray - Shreeraj Traders',
-    metaDescription: 'Corrosion proof perforated cable trays.'
-  },
-  {
-    id: 'prod-11',
-    srNo: 11,
-    name: 'Meniscus Top',
-    brandName: 'Shree Raj Traders',
-    categoryKey: 'frp-gratings',
-    slug: 'meniscus-top',
-    status: 'active' as 'active' | 'inactive',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200',
-    description: 'Standard concave meniscus surface molded grating for industrial drainage and platform walkways.',
-    metaTitle: 'Meniscus Top FRP Grating - Shreeraj Traders',
-    metaDescription: 'Meniscus top FRP grating.'
+    id: 'critical',
+    _id: 'critical',
+    key: 'critical',
+    name: 'Critical Care',
+    slug: 'critical-care',
+    displayOrder: 4,
+    tagline: 'Emergency, ICU injectables, IV infusions, and temperature-controlled biologicals.',
+    shortDescription: 'Specialty critical care and life-saving formulations managed under active 2°C–8°C cold chain.',
+    metaTitle: 'Critical Care & ICU Injectables Supplier - Firmitas 1',
+    metaDescription: 'Reliable cold-chain critical care pharmaceuticals for emergency wards and intensive care units.',
+    isActive: true,
+    productCount: productsData.filter(p => p.category === 'critical').length
   }
 ];
 
-// Shreeraj Traders Categories
-export const initialCategories = [
-  { id: 'switchgears', _id: 'switchgears', name: 'Switchgears', key: 'switchgears', displayOrder: 1, isActive: true },
-  { id: 'motors', _id: 'motors', name: 'Motors', key: 'motors', displayOrder: 2, isActive: true },
-  { id: 'frp-gratings', _id: 'frp-gratings', name: 'FRP Gratings', key: 'frp-gratings', displayOrder: 3, isActive: true },
-  { id: 'frp-cable-trays', _id: 'frp-cable-trays', name: 'FRP Cable Trays', key: 'frp-cable-trays', displayOrder: 4, isActive: true }
-];
+// Firmitas FAQs
+export const initialFaqs = faqsData.map((f, i) => ({
+  id: `faq-${i + 1}`,
+  _id: `faq-${i + 1}`,
+  question: f.q,
+  answer: f.a,
+  category: i < 3 ? 'Licensing & Orders' : i < 6 ? 'Delivery & Logistics' : 'Quality & Compliance',
+  displayOrder: i + 1,
+  isActive: true
+}));
 
+// Testimonials
 export const initialTestimonials = [
   {
     id: 'test-1',
     _id: 'test-1',
-    name: 'Rajesh Patel',
-    company: 'Gujarat Heavy Chemicals Ltd.',
-    quote: 'Shree Raj Traders has been our exclusive Siemens switchgear & motor vendor for over 15 years. Instant delivery and authentic material.',
+    name: 'Dr. Rajesh Patel',
+    designation: 'Chief of Pharmacy',
+    company: 'Apex Multi-Speciality Hospital',
+    location: 'Ahmedabad, Gujarat',
+    quote: 'Firmitas 1 has been our primary pharmaceutical distributor for over 3 years. Their cold-chain integrity and timely delivery for critical care injectables are unmatched.',
     rating: 5,
-    isActive: true,
-    displayOrder: 1
+    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80',
+    isActive: true
   },
   {
     id: 'test-2',
     _id: 'test-2',
-    name: 'Amit Shah',
-    company: 'Torrent Power Contractor Consortium',
-    quote: 'High quality FRP cable trays with zero defect rate. Passed all third-party flammability & load tests easily.',
+    name: 'Mehul Shah',
+    designation: 'Procurement Director',
+    company: 'Sanjivani Healthcare Network',
+    location: 'Surat, Gujarat',
+    quote: 'Complete batch documentation, valid CoAs with every dispatch, and zero stockout issues for essential surgical disposables and generic lines.',
     rating: 5,
-    isActive: true,
-    displayOrder: 2
-  }
-];
-
-export const initialFaqs = [
-  {
-    id: 'faq-1',
-    _id: 'faq-1',
-    question: 'Are all Siemens switchgears supplied with original test certificates?',
-    answer: 'Yes, every Siemens switchgear and motor is 100% factory original and comes with manufacturer warranty and test certificates.',
-    category: 'Switchgears',
-    displayOrder: 1,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     isActive: true
   },
   {
-    id: 'faq-2',
-    _id: 'faq-2',
-    question: 'What is the lead time for standard FRP cable trays & gratings?',
-    answer: 'Standard sizes are maintained in Ahmedabad warehouse ready for immediate 24-hour dispatch.',
-    category: 'FRP Products',
-    displayOrder: 2,
+    id: 'test-3',
+    _id: 'test-3',
+    name: 'Vikram Joshi',
+    designation: 'Retail Pharmacy Chain Head',
+    company: 'MediCare Chemist Group',
+    location: 'Vadodara, Gujarat',
+    quote: 'Competitive wholesale pricing and very responsive quotation turnaround. When we send an RFQ, we receive pricing confirmation within hours.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     isActive: true
   }
 ];
 
+// Blogs
 export const initialBlogs = [
   {
     id: 'blog-1',
     _id: 'blog-1',
-    title: 'Selecting High-Efficiency IE3 vs IE4 Motors for Industrial Pumps and Compressors',
-    slug: 'selecting-ie3-vs-ie4-motors-guide',
-    body: 'Complete technical breakdown of energy savings, torque characteristics and lifecycle ROI when upgrading to IE4 Siemens/CGL motors.',
-    author: 'Shreeraj Engineering Team',
+    title: 'Good Distribution Practice (GDP) in Modern Pharmaceutical Supply Chains',
+    slug: 'gdp-in-modern-pharmaceutical-supply-chains',
+    summary: 'How strict adherence to GDP protocols ensures product efficacy and patient safety from warehouse to clinical administration.',
+    content: 'Pharmaceutical logistics requires continuous monitoring of environmental factors including temperature, humidity, and physical handling. GDP ensures that products consistently meet defined quality standards...',
+    author: 'Firmitas Quality Assurance Team',
+    category: 'Supply Chain & Quality',
+    readTime: '4 min read',
+    coverImage: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
     status: 'published',
+    publishedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   },
   {
     id: 'blog-2',
     _id: 'blog-2',
-    title: 'Corrosion Resistance Advantages of FRP Cable Trays in Chemical & Marine Plants',
-    slug: 'frp-cable-trays-corrosion-resistance',
-    body: 'Why composite FRP cable trays outperform galvanized iron and stainless steel in coastal and acidic chemical processing environments.',
-    author: 'Shreeraj Technical Desk',
+    title: 'Cold Chain Logistics: Protecting Temperature-Sensitive Critical Care Formulations',
+    slug: 'cold-chain-logistics-critical-care-formulations',
+    summary: 'A deep dive into active and passive temperature control methods for biologicals, emergency injectables, and vaccines.',
+    content: 'Maintaining an unbroken 2°C to 8°C cold chain is essential for preserving the biological potency of critical care drugs. From thermal insulated shippers to digital data loggers...',
+    author: 'Firmitas Logistics Cell',
+    category: 'Cold Chain Protocols',
+    readTime: '6 min read',
+    coverImage: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&auto=format&fit=crop&q=80',
     status: 'published',
+    publishedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   }
 ];
 
+// Inquiries / RFQs
 export const initialInquiries = [
   {
     id: 'inq-1',
     _id: 'inq-1',
-    name: 'Kiran Desai',
-    company: 'Torrent Pharma Engineering Division',
-    email: 'kiran.desai@torrentpharma.com',
-    phone: '+91 98250 11223',
-    products: ['Siemens Motor', 'Low Voltage Control Product'],
-    message: 'Need quotation for 10 units of 15 HP IE3 Siemens motors with control panels.',
-    status: 'new',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'inq-2',
-    _id: 'inq-2',
-    name: 'Sanjay Varma',
-    company: 'L&T Infrastructure Projects',
-    email: 'sanjay.varma@larsentoubro.com',
-    phone: '+91 94280 44556',
-    products: ['Ladder Type Cable Tray', 'Checkered Plate'],
-    message: 'Require 500 meters of heavy-duty ladder type FRP cable tray for refinery project in Dahej.',
-    status: 'in-progress',
-    createdAt: new Date().toISOString()
+    srNo: 1,
+    name: 'Dr. Sameer Sen',
+    email: 'procurement@cityhospital.org',
+    phone: '+91 98980 11223',
+    organization: 'City Life Hospital',
+    city: 'Ahmedabad',
+    drugLicenceNo: 'GJ/AHM/20B-11204',
+    category: 'Critical Care & Surgical',
+    requirement: 'Bulk quotation requested for Meropenem 1g Injections (500 vials) and Disposable 5ml Syringes (20,000 units).',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
   }
 ];
 
+// Job Openings
 export const initialJobOpenings = [
   {
     id: 'job-1',
     _id: 'job-1',
-    title: 'Industrial Sales Engineer (Switchgear & Motors)',
+    title: 'Institutional Sales Executive - Hospital Supplies',
     department: 'Sales & Business Development',
     location: 'Ahmedabad, Gujarat',
-    description: 'Responsible for B2B client acquisition, OEM technical consultations, and quoting Siemens/CGL motors.',
-    requirements: ['B.E./Diploma in Electrical Engineering', '2+ years experience in industrial electrical sales'],
-    status: 'open'
+    type: 'Full-time',
+    experience: '2-4 Years in Pharma Distribution',
+    description: 'Responsible for building relationships with hospitals, nursing homes and chemist networks across Gujarat.',
+    requirements: ['B.Pharm / B.Sc / MBA with pharma sales background', 'Strong network with regional healthcare institutions', 'Excellent negotiation and CRM skills'],
+    status: 'active',
+    createdAt: new Date().toISOString()
   },
   {
     id: 'job-2',
     _id: 'job-2',
-    title: 'FRP Projects & Sourcing Coordinator',
-    department: 'Projects & Estimation',
-    location: 'Ahmedabad, Gujarat',
-    description: 'Prepare BOM takeoffs and drawings for FRP cable trays and gratings for EPC contractors.',
-    requirements: ['Mechanical / Civil Diploma with AutoCAD proficiency'],
-    status: 'open'
-  }
-];
-
-export const initialJobApplications = [
-  {
-    id: 'app-1',
-    _id: 'app-1',
-    jobTitle: 'Industrial Sales Engineer (Switchgear & Motors)',
-    name: 'Hardik Patel',
-    email: 'hardik.patel@gmail.com',
-    phone: '+91 98980 12345',
-    resumeUrl: '#',
-    coverNote: '4 years of experience selling Siemens switchgear and LV motor control panels in Gujarat industrial estates.',
-    status: 'shortlisted',
+    title: 'Quality Assurance & Regulatory Officer',
+    department: 'Compliance & Warehouse',
+    location: 'Gujarat, India',
+    type: 'Full-time',
+    experience: '3+ Years',
+    description: 'Manage batch documentation, Certificate of Analysis (CoA) verification, and Good Distribution Practice compliance.',
+    requirements: ['M.Pharm / B.Pharm with QA background', 'Deep knowledge of Indian Drugs & Cosmetics Act', 'Experience in cold-chain audit management'],
+    status: 'active',
     createdAt: new Date().toISOString()
   }
 ];
 
-export const initialUsers = [
-  {
-    id: 'usr-1',
-    name: 'Super Admin',
-    email: 'admin@shreerajtraders.com',
-    roleId: 'role-1',
-    roleName: 'Super Admin',
-    roleKey: 'super_admin',
-    isActive: true,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'usr-2',
-    name: 'Content Manager',
-    email: 'editor@shreerajtraders.com',
-    roleId: 'role-2',
-    roleName: 'Content Manager',
-    roleKey: 'editor',
-    isActive: true,
-    createdAt: new Date().toISOString()
-  }
-];
+export const initialJobApplications = [];
 
+// Admin Users & Roles
 export const initialRoles = [
   {
-    id: 'role-1',
-    _id: 'role-1',
-    name: 'Super Admin',
+    id: 'role_superadmin',
+    _id: 'role_superadmin',
     key: 'super_admin',
-    description: 'Unrestricted master access across all data and website CMS',
+    name: 'Super Admin',
+    description: 'Unrestricted access to all Firmitas admin, catalog, and visual CMS controls',
     isSystem: true,
     permissions: {
       dashboard: { view: true, create: true, edit: true, delete: true, publish: true },
+      products: { view: true, create: true, edit: true, delete: true, publish: true },
+      categories: { view: true, create: true, edit: true, delete: true, publish: true },
+      website_editor: { view: true, create: true, edit: true, delete: true, publish: true },
       users: { view: true, create: true, edit: true, delete: true, publish: true },
       roles: { view: true, create: true, edit: true, delete: true, publish: true },
       email_setup: { view: true, create: true, edit: true, delete: true, publish: true },
       email_for: { view: true, create: true, edit: true, delete: true, publish: true },
       email_template: { view: true, create: true, edit: true, delete: true, publish: true },
-      website_editor: { view: true, create: true, edit: true, delete: true, publish: true },
-      products: { view: true, create: true, edit: true, delete: true, publish: true },
-      categories: { view: true, create: true, edit: true, delete: true, publish: true },
-      testimonials: { view: true, create: true, edit: true, delete: true, publish: true },
-      faqs: { view: true, create: true, edit: true, delete: true, publish: true },
-      blogs: { view: true, create: true, edit: true, delete: true, publish: true },
       inquiries: { view: true, create: true, edit: true, delete: true, publish: true },
       job_openings: { view: true, create: true, edit: true, delete: true, publish: true },
-      job_applications: { view: true, create: true, edit: true, delete: true, publish: true }
+      job_applications: { view: true, create: true, edit: true, delete: true, publish: true },
+      testimonials: { view: true, create: true, edit: true, delete: true, publish: true },
+      faqs: { view: true, create: true, edit: true, delete: true, publish: true },
+      blogs: { view: true, create: true, edit: true, delete: true, publish: true }
     }
   },
   {
-    id: 'role-2',
-    _id: 'role-2',
-    name: 'Content Manager',
+    id: 'role_editor',
+    _id: 'role_editor',
     key: 'editor',
-    description: 'Manages products catalog, RFQ inquiries, and section content',
+    name: 'Editor',
+    description: 'Can manage catalog products, inquiries, and website CMS sections',
     isSystem: false,
     permissions: {
-      dashboard: { view: true, create: false, edit: false, delete: false },
-      products: { view: true, create: true, edit: true, delete: true },
-      categories: { view: true, create: true, edit: true, delete: false },
-      inquiries: { view: true, create: false, edit: true, delete: false },
-      testimonials: { view: true, create: true, edit: true, delete: false },
-      faqs: { view: true, create: true, edit: true, delete: false },
-      blogs: { view: true, create: true, edit: true, delete: false },
-      job_openings: { view: true, create: true, edit: true, delete: false },
-      job_applications: { view: true, create: false, edit: true, delete: false },
-      website_editor: { view: true, create: true, edit: true, delete: false, publish: true }
+      dashboard: { view: true, create: false, edit: false, delete: false, publish: false },
+      products: { view: true, create: true, edit: true, delete: false, publish: true },
+      categories: { view: true, create: true, edit: true, delete: false, publish: true },
+      website_editor: { view: true, create: true, edit: true, delete: false, publish: true },
+      inquiries: { view: true, create: false, edit: true, delete: false, publish: false },
+      job_openings: { view: true, create: true, edit: true, delete: false, publish: true },
+      job_applications: { view: true, create: false, edit: true, delete: false, publish: false },
+      testimonials: { view: true, create: true, edit: true, delete: false, publish: true },
+      faqs: { view: true, create: true, edit: true, delete: false, publish: true },
+      blogs: { view: true, create: true, edit: true, delete: false, publish: true }
     }
   }
 ];
 
-// Website Editor Sections for Shreeraj Traders
+export const initialUsers = [
+  {
+    id: 'usr_superadmin',
+    _id: 'usr_superadmin',
+    name: 'Super Admin',
+    email: 'admin@firmitas.com',
+    roleId: 'role_superadmin',
+    roleKey: 'super_admin',
+    roleName: 'Super Admin',
+    isActive: true,
+    avatar: '',
+    createdAt: new Date().toISOString()
+  }
+];
+
+// Complete Firmitas Website Sections CMS for all Tabs
 export const initialWebsiteSections: Record<string, any[]> = {
   'site-wide': [
     {
-      id: 'sec-1',
+      id: 'sec-sw-1',
       pageKey: 'site-wide',
       key: 'top-nav-bar',
-      name: 'Top navigation bar',
-      description: 'Logo wordmark, menu labels and the "Get Quote" button.',
+      name: 'Top Navigation & Branding',
+      description: 'Brand name, tagline, hotline, and primary navigation CTA.',
       order: 1,
       fields: [
-        { key: 'brandTitle', label: 'Brand Title', type: 'text' },
-        { key: 'partnerSubtitle', label: 'Partners Subtitle', type: 'text' },
-        { key: 'ctaButtonText', label: 'CTA Button Text', type: 'text' },
-        { key: 'ctaPhoneNumber', label: 'Emergency Hotline / Phone', type: 'text' }
+        { key: 'brandTitle', label: 'Brand Name', type: 'text' },
+        { key: 'tagline', label: 'Company Tagline', type: 'text' },
+        { key: 'ctaButtonText', label: 'Header CTA Button', type: 'text' },
+        { key: 'primaryPhone', label: 'Phone Number', type: 'text' },
+        { key: 'primaryEmail', label: 'Contact Email', type: 'text' }
       ],
       content: {
-        id: 'cnt-1',
         draftData: {
-          brandTitle: 'SHREE RAJ TRADERS',
-          partnerSubtitle: 'SIEMENS · CGL · HINDUSTAN ELECTRIC',
-          ctaButtonText: 'GET QUOTE',
-          ctaPhoneNumber: '+91-97267 88690'
+          brandTitle: 'Firmitas 1',
+          tagline: 'Global Reach. Trusted Care.',
+          ctaButtonText: 'Request a Quote',
+          primaryPhone: company.phone || '+91 82002 28607',
+          primaryEmail: company.email || 'sales@firmitas1.com'
         },
         publishedData: {
-          brandTitle: 'SHREE RAJ TRADERS',
-          partnerSubtitle: 'SIEMENS · CGL · HINDUSTAN ELECTRIC',
-          ctaButtonText: 'GET QUOTE',
-          ctaPhoneNumber: '+91-97267 88690'
-        },
-        isEdited: true,
-        status: 'draft',
-        lastEditedBy: 'Super Admin',
-        lastEditedAt: '2026-08-20T15:31:26.000Z'
-      }
-    },
-    {
-      id: 'sec-2',
-      pageKey: 'site-wide',
-      key: 'company-contact-details',
-      name: 'Company contact details',
-      description: 'Phone numbers, email addresses and the office address. Used by the header, footer, contact page and every city page at once.',
-      order: 2,
-      fields: [
-        { key: 'officeAddress', label: 'Office Address', type: 'textarea' },
-        { key: 'primaryEmail', label: 'Primary Email', type: 'text' },
-        { key: 'salesPhone', label: 'Sales Contact Phone', type: 'text' },
-        { key: 'workingHours', label: 'Working Hours', type: 'text' }
-      ],
-      content: {
-        id: 'cnt-2',
-        draftData: {
-          officeAddress: '104, Sakar-III, Near Income Tax Circle, Ashram Road, Ahmedabad, Gujarat 380014',
-          primaryEmail: 'sales@shreerajtraders.com',
-          salesPhone: '+91 98250 12345',
-          workingHours: 'Mon - Sat: 9:30 AM to 7:00 PM'
-        },
-        publishedData: {
-          officeAddress: '104, Sakar-III, Near Income Tax Circle, Ashram Road, Ahmedabad, Gujarat 380014',
-          primaryEmail: 'sales@shreerajtraders.com',
-          salesPhone: '+91 98250 12345',
-          workingHours: 'Mon - Sat: 9:30 AM to 7:00 PM'
+          brandTitle: 'Firmitas 1',
+          tagline: 'Global Reach. Trusted Care.',
+          ctaButtonText: 'Request a Quote',
+          primaryPhone: company.phone || '+91 82002 28607',
+          primaryEmail: company.email || 'sales@firmitas1.com'
         },
         isEdited: false,
         status: 'published',
         lastEditedBy: 'Super Admin',
-        lastEditedAt: '2026-08-20T14:15:00.000Z'
+        lastEditedAt: new Date().toISOString()
       }
     },
     {
-      id: 'sec-3',
+      id: 'sec-sw-2',
       pageKey: 'site-wide',
-      key: 'footer-content',
-      name: 'Footer & Copyright bar',
-      description: 'Footer disclaimer, accreditation seals, quick links and copyright notice.',
-      order: 3,
+      key: 'company-contact-details',
+      name: 'Company Contact & Office Details',
+      description: 'Corporate address, operating hours, phone numbers and sales email.',
+      order: 2,
       fields: [
-        { key: 'copyrightText', label: 'Copyright Text', type: 'text' },
-        { key: 'gstin', label: 'GSTIN Number', type: 'text' },
-        { key: 'cin', label: 'Company CIN / Reg', type: 'text' }
+        { key: 'legalName', label: 'Legal Company Name', type: 'text' },
+        { key: 'officeAddress', label: 'Office Address', type: 'textarea' },
+        { key: 'workingHours', label: 'Working Hours', type: 'text' },
+        { key: 'whatsappNumber', label: 'WhatsApp Number', type: 'text' }
       ],
       content: {
-        id: 'cnt-3',
         draftData: {
-          copyrightText: '© 2026 Shree Raj Traders. All Rights Reserved.',
-          gstin: '24AAAAA0000A1Z5',
-          cin: 'U51909GJ2005PTC045678'
+          legalName: company.legalName || 'Firmitas 1 Pharma Solutions',
+          officeAddress: company.addressLines.join(' '),
+          workingHours: company.hours || 'Monday to Saturday, 09:00 – 18:00 IST',
+          whatsappNumber: company.whatsapp || '918200228607'
         },
         publishedData: {
-          copyrightText: '© 2026 Shree Raj Traders. All Rights Reserved.',
-          gstin: '24AAAAA0000A1Z5',
-          cin: 'U51909GJ2005PTC045678'
+          legalName: company.legalName || 'Firmitas 1 Pharma Solutions',
+          officeAddress: company.addressLines.join(' '),
+          workingHours: company.hours || 'Monday to Saturday, 09:00 – 18:00 IST',
+          whatsappNumber: company.whatsapp || '918200228607'
+        },
+        isEdited: false,
+        status: 'published',
+        lastEditedBy: 'Super Admin',
+        lastEditedAt: new Date().toISOString()
+      }
+    },
+    {
+      id: 'sec-sw-3',
+      pageKey: 'site-wide',
+      key: 'footer-content',
+      name: 'Footer & Compliance Disclaimer',
+      description: 'Footer copyright, regulatory disclaimer, and compliance badges.',
+      order: 3,
+      fields: [
+        { key: 'copyrightText', label: 'Copyright Notice', type: 'text' },
+        { key: 'disclaimerText', label: 'Wholesale / B2B Disclaimer', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          copyrightText: `© ${new Date().getFullYear()} Firmitas 1 Pharma Solutions. All Rights Reserved.`,
+          disclaimerText: 'Firmitas 1 is a B2B pharmaceutical and healthcare distributor. All prescription medicines and surgical supplies are provided exclusively against valid drug licenses and institutional credentials.'
+        },
+        publishedData: {
+          copyrightText: `© ${new Date().getFullYear()} Firmitas 1 Pharma Solutions. All Rights Reserved.`,
+          disclaimerText: 'Firmitas 1 is a B2B pharmaceutical and healthcare distributor. All prescription medicines and surgical supplies are provided exclusively against valid drug licenses and institutional credentials.'
         },
         isEdited: false,
         status: 'published'
       }
     }
   ],
+
   'home': [
     {
-      id: 'sec-4',
+      id: 'sec-hm-1',
       pageKey: 'home',
       key: 'hero-banner',
-      name: 'Hero Banner & Value Proposition',
-      description: 'Main hero headline, authorized channel partner badge, description paragraph and primary CTAs.',
+      name: 'Hero Banner & Core Promise',
+      description: 'Primary headline, subtitle, institutional badge and CTA buttons on the Home page.',
       order: 1,
       fields: [
-        { key: 'partnerBadge', label: 'Partner Badge Text', type: 'text' },
-        { key: 'mainHeadingLine1', label: 'Headline Line 1', type: 'text' },
-        { key: 'highlightHeadingLine2', label: 'Headline Line 2 (Highlighted)', type: 'text' },
-        { key: 'mainHeadingLine3', label: 'Headline Line 3', type: 'text' },
-        { key: 'subheading', label: 'Lead Paragraph / Subheading', type: 'textarea' },
-        { key: 'primaryCtaText', label: 'Primary CTA Button', type: 'text' },
-        { key: 'secondaryCtaPhone', label: 'Secondary Call Button', type: 'text' }
+        { key: 'badgeText', label: 'Top Pill / Badge', type: 'text' },
+        { key: 'mainHeadline', label: 'Main Headline', type: 'text' },
+        { key: 'subHeadline', label: 'Sub-headline / Paragraph', type: 'textarea' },
+        { key: 'primaryCta', label: 'Primary Button Label', type: 'text' },
+        { key: 'secondaryCta', label: 'Secondary Button Label', type: 'text' }
       ],
       content: {
-        id: 'cnt-4',
         draftData: {
-          partnerBadge: 'AUTHORIZED CHANNEL PARTNER · OVER SIX DECADES',
-          mainHeadingLine1: 'SWITCHGEARS, MOTORS &',
-          highlightHeadingLine2: 'MOTORS',
-          mainHeadingLine3: 'FOR INDIAN INDUSTRY',
-          subheading: 'Welcome to Shree Raj Traders – a trusted Siemens switchgear supplier in Ahmedabad and authorized channel partner for motors, gearboxes, switchgear, and FRP cable trays and gratings.',
-          primaryCtaText: 'REQUEST A QUOTE',
-          secondaryCtaPhone: '+91-97267 88690'
+          badgeText: 'Institutional Healthcare & Pharmaceutical Supply',
+          mainHeadline: 'Global Reach. Trusted Care. Reliable Healthcare Supply.',
+          subHeadline: 'Supplying hospitals, clinics, and pharmacy networks with certified ethical drugs, surgical consumables, OTC lines, and critical care essentials with zero supply-chain disruptions.',
+          primaryCta: 'Request a Quotation',
+          secondaryCta: 'Explore Products'
         },
         publishedData: {
-          partnerBadge: 'AUTHORIZED CHANNEL PARTNER · OVER SIX DECADES',
-          mainHeadingLine1: 'SWITCHGEARS, MOTORS &',
-          highlightHeadingLine2: 'MOTORS',
-          mainHeadingLine3: 'FOR INDIAN INDUSTRY',
-          subheading: 'Welcome to Shree Raj Traders – a trusted Siemens switchgear supplier in Ahmedabad and authorized channel partner for motors, gearboxes, switchgear, and FRP cable trays and gratings.',
-          primaryCtaText: 'REQUEST A QUOTE',
-          secondaryCtaPhone: '+91-97267 88690'
+          badgeText: 'Institutional Healthcare & Pharmaceutical Supply',
+          mainHeadline: 'Global Reach. Trusted Care. Reliable Healthcare Supply.',
+          subHeadline: 'Supplying hospitals, clinics, and pharmacy networks with certified ethical drugs, surgical consumables, OTC lines, and critical care essentials with zero supply-chain disruptions.',
+          primaryCta: 'Request a Quotation',
+          secondaryCta: 'Explore Products'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    },
+    {
+      id: 'sec-hm-2',
+      pageKey: 'home',
+      key: 'four-divisions',
+      name: '4 Supply Divisions Highlight',
+      description: 'Headings and introductory summary for the 4 core supply verticals.',
+      order: 2,
+      fields: [
+        { key: 'sectionHeading', label: 'Section Title', type: 'text' },
+        { key: 'sectionSubtitle', label: 'Section Subtitle', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          sectionHeading: 'Complete Supply Coverage Across 4 Core Verticals',
+          sectionSubtitle: 'Everything your hospital, clinic, or pharmacy requires — sourced directly from accredited WHO-GMP manufacturers.'
+        },
+        publishedData: {
+          sectionHeading: 'Complete Supply Coverage Across 4 Core Verticals',
+          sectionSubtitle: 'Everything your hospital, clinic, or pharmacy requires — sourced directly from accredited WHO-GMP manufacturers.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    },
+    {
+      id: 'sec-hm-3',
+      pageKey: 'home',
+      key: 'why-choose-preview',
+      name: 'Why Choose Us Preview',
+      description: 'Highlighting batch traceability, cold chain integrity, and rapid delivery.',
+      order: 3,
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'summary', label: 'Summary Paragraph', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          title: 'Built on Rigorous Compliance & Verified Sourcing',
+          summary: 'From validated cold-chain storage (2°C–8°C) to complete batch documentation with Certificate of Analysis (CoA), we protect patient safety at every step.'
+        },
+        publishedData: {
+          title: 'Built on Rigorous Compliance & Verified Sourcing',
+          summary: 'From validated cold-chain storage (2°C–8°C) to complete batch documentation with Certificate of Analysis (CoA), we protect patient safety at every step.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    },
+    {
+      id: 'sec-hm-4',
+      pageKey: 'home',
+      key: 'cta-banner',
+      name: 'Bottom Call-to-Action Strip',
+      description: 'Bottom conversion banner leading to Enquiry / RFQ.',
+      order: 4,
+      fields: [
+        { key: 'headline', label: 'Banner Headline', type: 'text' },
+        { key: 'buttonText', label: 'Button Label', type: 'text' },
+        { key: 'supportNotice', label: 'Support Notice / SLA', type: 'text' }
+      ],
+      content: {
+        draftData: {
+          headline: 'Ready to Streamline Your Pharmaceutical Supply?',
+          buttonText: 'Submit an RFQ Now',
+          supportNotice: 'Quotations generated within 2-4 business hours for institutional buyers.'
+        },
+        publishedData: {
+          headline: 'Ready to Streamline Your Pharmaceutical Supply?',
+          buttonText: 'Submit an RFQ Now',
+          supportNotice: 'Quotations generated within 2-4 business hours for institutional buyers.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'about': [
+    {
+      id: 'sec-ab-1',
+      pageKey: 'about',
+      key: 'about-hero',
+      name: 'About Page Header & Mission',
+      description: 'Main heading, company overview, and core mission statement.',
+      order: 1,
+      fields: [
+        { key: 'pageTitle', label: 'Page Title', type: 'text' },
+        { key: 'tagline', label: 'Tagline', type: 'text' },
+        { key: 'missionStatement', label: 'Mission Statement', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          pageTitle: 'About Firmitas 1',
+          tagline: 'Bridging Healthcare Demand with Certified Quality',
+          missionStatement: 'To deliver uncompromising quality in pharmaceutical and healthcare distribution by combining strict regulatory compliance, transparent batch tracking, and reliable logistics across India and global markets.'
+        },
+        publishedData: {
+          pageTitle: 'About Firmitas 1',
+          tagline: 'Bridging Healthcare Demand with Certified Quality',
+          missionStatement: 'To deliver uncompromising quality in pharmaceutical and healthcare distribution by combining strict regulatory compliance, transparent batch tracking, and reliable logistics across India and global markets.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'categories': [
+    {
+      id: 'sec-cat-1',
+      pageKey: 'categories',
+      key: 'categories-header',
+      name: 'Categories Page Header',
+      description: 'Header text and introduction for the 4 supply divisions.',
+      order: 1,
+      fields: [
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          title: 'Supply Categories & Therapeutic Divisions',
+          description: 'Comprehensive pharmaceutical and surgical product lines available for wholesale institutional distribution.'
+        },
+        publishedData: {
+          title: 'Supply Categories & Therapeutic Divisions',
+          description: 'Comprehensive pharmaceutical and surgical product lines available for wholesale institutional distribution.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'products': [
+    {
+      id: 'sec-pr-1',
+      pageKey: 'products',
+      key: 'products-header',
+      name: 'Product Catalog Header & Disclaimer',
+      description: 'Title, filter instructions, and B2B quotation notice on the Products page.',
+      order: 1,
+      fields: [
+        { key: 'title', label: 'Catalog Title', type: 'text' },
+        { key: 'subtitle', label: 'Subtitle', type: 'text' },
+        { key: 'licensingNotice', label: 'Licensing Disclaimer Notice', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          title: 'Institutional Pharmaceutical & Supply Catalog',
+          subtitle: 'Search across 40+ molecules, formulations, surgical consumables, and critical care injectables.',
+          licensingNotice: 'Notice: This catalog is published for licensed healthcare institutions, hospitals, and pharmacies. Prices and batch lots are quoted upon official RFQ verification.'
+        },
+        publishedData: {
+          title: 'Institutional Pharmaceutical & Supply Catalog',
+          subtitle: 'Search across 40+ molecules, formulations, surgical consumables, and critical care injectables.',
+          licensingNotice: 'Notice: This catalog is published for licensed healthcare institutions, hospitals, and pharmacies. Prices and batch lots are quoted upon official RFQ verification.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'why-choose-us': [
+    {
+      id: 'sec-wcu-1',
+      pageKey: 'why-choose-us',
+      key: 'wcu-header',
+      name: 'Why Choose Us Overview',
+      description: 'Main heading, quality commitments, and operational advantages.',
+      order: 1,
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'subtitle', label: 'Subtitle', type: 'text' },
+        { key: 'commitmentText', label: 'Quality Commitment Statement', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          title: 'Why Healthcare Providers Choose Firmitas 1',
+          subtitle: 'Reliable Supply Chains. Complete Batch Authenticity. Dedicated Support.',
+          commitmentText: 'We understand that in healthcare, reliability is not just a business metric — it is a patient outcome. Every batch we dispatch is vetted for compliance, temperature control, and manufacturer authentication.'
+        },
+        publishedData: {
+          title: 'Why Healthcare Providers Choose Firmitas 1',
+          subtitle: 'Reliable Supply Chains. Complete Batch Authenticity. Dedicated Support.',
+          commitmentText: 'We understand that in healthcare, reliability is not just a business metric — it is a patient outcome. Every batch we dispatch is vetted for compliance, temperature control, and manufacturer authentication.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'compliance': [
+    {
+      id: 'sec-cmp-1',
+      pageKey: 'compliance',
+      key: 'compliance-header',
+      name: 'Compliance & Quality Standards',
+      description: 'Regulatory compliance details, GDP certification, and CoA verification.',
+      order: 1,
+      fields: [
+        { key: 'title', label: 'Page Title', type: 'text' },
+        { key: 'subtitle', label: 'Subtitle', type: 'text' },
+        { key: 'gdpSummary', label: 'GDP Policy Summary', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          title: 'Regulatory Compliance & Quality Assurance',
+          subtitle: 'Adhering strictly to Indian CDSCO guidelines and WHO Good Distribution Practices.',
+          gdpSummary: 'All pharmaceutical stock is stored in temperature-regulated facilities with continuous data logging, strict pest control, and batch-wise quarantine protocols.'
+        },
+        publishedData: {
+          title: 'Regulatory Compliance & Quality Assurance',
+          subtitle: 'Adhering strictly to Indian CDSCO guidelines and WHO Good Distribution Practices.',
+          gdpSummary: 'All pharmaceutical stock is stored in temperature-regulated facilities with continuous data logging, strict pest control, and batch-wise quarantine protocols.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'contact': [
+    {
+      id: 'sec-cnt-1',
+      pageKey: 'contact',
+      key: 'contact-header',
+      name: 'Contact Page Information',
+      description: 'Contact headings, SLA notice, and direct inquiry channels.',
+      order: 1,
+      fields: [
+        { key: 'title', label: 'Contact Header Title', type: 'text' },
+        { key: 'subtitle', label: 'Subtitle', type: 'text' },
+        { key: 'slaNotice', label: 'Response Time Notice', type: 'text' }
+      ],
+      content: {
+        draftData: {
+          title: 'Get in Touch with Our Procurement Team',
+          subtitle: 'We are here to assist with hospital rate contracts, bulk procurement, and supply inquiries.',
+          slaNotice: 'Standard RFQs and catalog inquiries are responded to within 2 to 4 business hours.'
+        },
+        publishedData: {
+          title: 'Get in Touch with Our Procurement Team',
+          subtitle: 'We are here to assist with hospital rate contracts, bulk procurement, and supply inquiries.',
+          slaNotice: 'Standard RFQs and catalog inquiries are responded to within 2 to 4 business hours.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'enquiry': [
+    {
+      id: 'sec-enq-1',
+      pageKey: 'enquiry',
+      key: 'enquiry-header',
+      name: 'Enquiry & RFQ Form Header',
+      description: 'Instructions, minimum order policies, and required document guidelines.',
+      order: 1,
+      fields: [
+        { key: 'title', label: 'Form Title', type: 'text' },
+        { key: 'subtitle', label: 'Form Subtitle', type: 'text' },
+        { key: 'instructions', label: 'Submission Instructions', type: 'textarea' }
+      ],
+      content: {
+        draftData: {
+          title: 'Request a Quotation (RFQ)',
+          subtitle: 'Submit your required molecules, quantities, and delivery timeline.',
+          instructions: 'Please provide valid institution details and drug license numbers where applicable. Our procurement specialists will return a detailed quotation with batch availability.'
+        },
+        publishedData: {
+          title: 'Request a Quotation (RFQ)',
+          subtitle: 'Submit your required molecules, quantities, and delivery timeline.',
+          instructions: 'Please provide valid institution details and drug license numbers where applicable. Our procurement specialists will return a detailed quotation with batch availability.'
+        },
+        isEdited: false,
+        status: 'published'
+      }
+    }
+  ],
+
+  'seo': [
+    {
+      id: 'sec-seo-1',
+      pageKey: 'seo',
+      key: 'meta-tags',
+      name: 'Global Site SEO & OpenGraph',
+      description: 'Default Meta title, description, and keywords for search engine indexing.',
+      order: 1,
+      fields: [
+        { key: 'siteTitle', label: 'Default Site Title', type: 'text' },
+        { key: 'metaDescription', label: 'Default Meta Description', type: 'textarea' },
+        { key: 'keywords', label: 'Keywords (Comma separated)', type: 'text' }
+      ],
+      content: {
+        draftData: {
+          siteTitle: 'Firmitas 1 — Pharmaceutical & Healthcare Supplies Distributor',
+          metaDescription: 'Trusted wholesale distributor of ethical & generic medicines, surgical supplies, OTC products, and critical care injectables with guaranteed cold-chain compliance.',
+          keywords: 'Firmitas, pharmaceutical distributor, hospital supplies India, wholesale medicines, generic drugs distributor, critical care supplier'
+        },
+        publishedData: {
+          siteTitle: 'Firmitas 1 — Pharmaceutical & Healthcare Supplies Distributor',
+          metaDescription: 'Trusted wholesale distributor of ethical & generic medicines, surgical supplies, OTC products, and critical care injectables with guaranteed cold-chain compliance.',
+          keywords: 'Firmitas, pharmaceutical distributor, hospital supplies India, wholesale medicines, generic drugs distributor, critical care supplier'
         },
         isEdited: false,
         status: 'published'
       }
     }
   ]
-};
-
-// Initialize all data stores on import
-export const getAdminData = (key: string) => {
-  switch (key) {
-    case 'products': return initStorage('products', initialProducts);
-    case 'categories': return initStorage('categories', initialCategories);
-    case 'faqs': return initStorage('faqs', initialFaqs);
-    case 'testimonials': return initStorage('testimonials', initialTestimonials);
-    case 'blogs': return initStorage('blogs', initialBlogs);
-    case 'inquiries': return initStorage('inquiries', initialInquiries);
-    case 'job-openings': return initStorage('job-openings', initialJobOpenings);
-    case 'job-applications': return initStorage('job-applications', initialJobApplications);
-    case 'users': return initStorage('users', initialUsers);
-    case 'roles': return initStorage('roles', initialRoles);
-    case 'website-sections': return initStorage('website-sections', initialWebsiteSections);
-    default: return [];
-  }
 };

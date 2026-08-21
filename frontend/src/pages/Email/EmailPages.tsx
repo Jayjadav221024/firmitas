@@ -11,8 +11,8 @@ export const EmailSetupPage: React.FC = () => {
     secure: false,
     user: '',
     pass: '',
-    fromName: 'Shreeraj Traders Admin',
-    fromEmail: 'info@shreerajtraders.com'
+    fromName: 'Firmitas 1 Pharma Admin',
+    fromEmail: 'sales@firmitas1.com'
   });
 
   const { data: res, isLoading } = useQuery({

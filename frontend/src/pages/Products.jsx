@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   ChevronRight,
   Search,
@@ -14,16 +15,11 @@ import {
   Info,
 } from 'lucide-react';
 import PageHero from '../components/PageHero';
-import { productsData, categories, productCountByCategory, totalProductCount } from '../data/products';
+import { productsData, categories } from '../data/products';
+import { adminApi } from '../api/client';
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
 
-const filterTabs = [
-  { id: 'all', label: 'All Categories', count: totalProductCount },
-  ...categories.map((c) => ({ id: c.id, label: c.label, count: productCountByCategory[c.id] })),
-];
-const validFilters = filterTabs.map((tab) => tab.id);
-
-// Dosage form drives the card icon — no stock photography, because a generic
-// photo of unrelated pills labelled as a specific molecule would be misleading.
+// Dosage form drives the card icon — no stock photography
 const formIcons = {
   Tablet: Pill,
   Capsule: Pill,
@@ -48,14 +44,48 @@ function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { getField } = useWebsiteContent('products');
+
+  const { data: rawProducts = productsData } = useQuery({
+    queryKey: ['public-catalog-products'],
+    queryFn: async () => {
+      const prods = await adminApi.getProducts();
+      return prods && prods.length > 0 ? prods : productsData;
+    },
+    initialData: productsData
+  });
+
+  // Normalise product structure whether from API or static file
+  const allProducts = rawProducts.map((p, idx) => ({
+    id: p.id || p._id || `prod-${idx}`,
+    name: p.name,
+    composition: p.composition || p.therapeuticUse || '',
+    category: p.category || p.categoryKey || 'ethical',
+    form: p.form || 'Tablet',
+    rxType: p.rxType || 'Rx',
+    packaging: p.packaging || 'Standard Pack',
+    storage: p.storage || 'Store in cool and dry place',
+    use: p.use || p.therapeuticUse || p.description || '',
+    coldChain: p.coldChain || (p.storage && p.storage.toLowerCase().includes('cold'))
+  }));
+
+  const productCountByCategory = allProducts.reduce((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  const filterTabs = [
+    { id: 'all', label: 'All Categories', count: allProducts.length },
+    ...categories.map((c) => ({ id: c.id, label: c.label, count: productCountByCategory[c.id] || 0 })),
+  ];
+  const validFilters = filterTabs.map((tab) => tab.id);
 
   // The active filter lives in the URL, so /products?category=otc is shareable
-  // and links from other pages land on the right tab.
   const requested = searchParams.get('category');
   const activeFilter = validFilters.includes(requested) ? requested : 'all';
 
   const normalisedQuery = query.trim().toLowerCase();
-  const filteredProducts = productsData.filter((product) => {
+  const filteredProducts = allProducts.filter((product) => {
     const matchesCategory = activeFilter === 'all' || product.category === activeFilter;
     if (!matchesCategory) return false;
     if (!normalisedQuery) return true;
@@ -78,9 +108,9 @@ function Products() {
     <>
       <PageHero
         eyebrow="PRODUCT SHOWCASE"
-        title="Explore Our Core Catalog"
+        title={getField('products-header', 'title', 'Explore Our Core Catalog')}
         breadcrumb="Products"
-        description={`${totalProductCount} product lines across four supply divisions. Filter by category, search by molecule, and request a trade quotation on any line.`}
+        description={getField('products-header', 'subtitle', `${allProducts.length} product lines across four supply divisions. Filter by category, search by molecule, and request a trade quotation on any line.`)}
       />
 
       <section className="py-16 md:py-20 bg-slate-50 relative overflow-hidden">

@@ -3,8 +3,14 @@ import { Phone, Mail, MapPin, Globe, Clock } from 'lucide-react';
 import Logo from './Logo';
 import { categories } from '../data/products';
 import { company } from '../data/company';
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
 
 function Footer() {
+  const { getField } = useWebsiteContent('site-wide');
+  const disclaimer = getField('footer-content', 'disclaimerText', 'Firmitas 1 is a B2B pharmaceutical and healthcare distributor. All prescription medicines and surgical supplies are provided exclusively against valid drug licenses and institutional credentials.');
+  const copyright = getField('footer-content', 'copyrightText', `© ${new Date().getFullYear()} Firmitas 1 Pharma Solutions. All Rights Reserved.`);
+  const address = getField('company-contact-details', 'officeAddress', company.addressLines.join(' '));
+
   return (
     <footer className="bg-slate-900 text-slate-400 pt-16 pb-8 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 mb-12">
@@ -18,7 +24,7 @@ function Footer() {
             </span>
           </Link>
           <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-            A newly founded pharmaceutical distribution company supplying ethical formulations, surgical products, critical care, and OTC solutions to licensed healthcare buyers.
+            {disclaimer}
           </p>
         </div>
 

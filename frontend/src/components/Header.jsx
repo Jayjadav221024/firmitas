@@ -4,11 +4,17 @@ import { Phone, Mail, MapPin, Clock, Menu, X } from 'lucide-react';
 import Logo from './Logo';
 import { navLinks } from '../data/navLinks';
 import { company } from '../data/company';
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { getField } = useWebsiteContent('site-wide');
+
+  const phone = getField('top-nav-bar', 'primaryPhone', company.phone);
+  const email = getField('top-nav-bar', 'primaryEmail', company.email);
+  const ctaText = getField('top-nav-bar', 'ctaButtonText', 'Request a Quote');
 
   // Sticky header shadow on scroll
   useEffect(() => {
@@ -50,13 +56,13 @@ function Header() {
       {/* Top Banner Contacts */}
       <div className="bg-brand-blue text-white text-xs py-2 px-4 md:px-8 flex flex-wrap justify-between items-center relative z-30 border-b border-white/10">
         <div className="flex gap-6 items-center flex-wrap">
-          <a href={company.phoneHref} className="flex items-center gap-1.5 hover:text-brand-orange transition-colors">
+          <a href={`tel:${phone.replace(/\s+/g, '')}`} className="flex items-center gap-1.5 hover:text-brand-orange transition-colors">
             <Phone size={12} className="text-brand-orange" />
-            <span>{company.phone}</span>
+            <span>{phone}</span>
           </a>
-          <a href={`mailto:${company.email}`} className="flex items-center gap-1.5 hover:text-brand-orange transition-colors">
+          <a href={`mailto:${email}`} className="flex items-center gap-1.5 hover:text-brand-orange transition-colors">
             <Mail size={12} className="text-brand-orange" />
-            <span>{company.email}</span>
+            <span>{email}</span>
           </a>
           <span className="hidden md:flex items-center gap-1.5 text-slate-300">
             <MapPin size={12} className="text-brand-orange" />

@@ -28,6 +28,7 @@ import FaqAccordion from '../components/FaqAccordion';
 import ScrollReveal from '../components/ScrollReveal';
 import { categories, productCountByCategory, totalProductCount } from '../data/products';
 import { faqs } from '../data/faqs';
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
 
 // How an order actually moves through the business, start to finish.
 const orderSteps = [
@@ -166,6 +167,7 @@ const therapeuticSegments = [
 function Home() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeSegment, setActiveSegment] = useState('antibiotics');
+  const { getField } = useWebsiteContent('home');
 
   // Filter featured products based on active tab
   const filteredProducts = activeCategory === 'all'
@@ -194,20 +196,19 @@ function Home() {
             <ScrollReveal animation="fade-in-up" delay={0}>
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-brand-blue font-semibold text-xs uppercase tracking-wider mb-6">
                 <span className="flex h-2 w-2 rounded-full bg-brand-orange animate-pulse"></span>
-                Newly Founded · Now Accepting Bulk Enquiries
+                {getField('hero-banner', 'badgeText', 'Newly Founded · Now Accepting Bulk Enquiries')}
               </div>
             </ScrollReveal>
 
             <ScrollReveal animation="fade-in-up" delay={100}>
               <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-slate-900 tracking-tight leading-tight mb-6">
-                Complete Pharmacy <br className="hidden md:inline" />
-                <span className="bg-gradient-to-r from-brand-blue to-blue-600 bg-clip-text text-transparent">Solutions</span>
+                {getField('hero-banner', 'mainHeadline', 'Complete Pharmacy Solutions')}
               </h1>
             </ScrollReveal>
 
             <ScrollReveal animation="fade-in-up" delay={200}>
               <p className="text-slate-600 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl mx-auto lg:mx-0">
-                Firmitas 1 is a newly founded pharmaceutical distributor supplying ethical drugs, surgical essentials, critical care medicines, and OTC products to pharmacies, hospitals, and clinics. Tell us what you need and we will quote it.
+                {getField('hero-banner', 'subHeadline', 'Firmitas 1 is a newly founded pharmaceutical distributor supplying ethical drugs, surgical essentials, critical care medicines, and OTC products to pharmacies, hospitals, and clinics. Tell us what you need and we will quote it.')}
               </p>
             </ScrollReveal>
 
@@ -217,14 +218,14 @@ function Home() {
                   to="/enquiry"
                   className="w-full sm:w-auto bg-brand-orange text-white hover:bg-orange-600 font-semibold px-8 py-4 rounded-xl shadow-lg shadow-brand-orange/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                 >
-                  Request Bulk Quote
+                  {getField('hero-banner', 'primaryCta', 'Request Bulk Quote')}
                   <ChevronRight size={18} />
                 </Link>
                 <Link
                   to="/products"
                   className="w-full sm:w-auto bg-white border border-slate-200 hover:border-brand-blue text-slate-700 hover:text-brand-blue font-semibold px-8 py-4 rounded-xl shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                 >
-                  View Catalog
+                  {getField('hero-banner', 'secondaryCta', 'View Catalog')}
                 </Link>
               </div>
             </ScrollReveal>

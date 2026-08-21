@@ -43,3 +43,5 @@ export const faqs = [
     a: `Enquiries are handled during business hours — ${company.hours}. If a requirement is urgent, call or WhatsApp on ${company.phone} rather than using the form.`,
   },
 ];
+
+export const faqsData = faqs;
