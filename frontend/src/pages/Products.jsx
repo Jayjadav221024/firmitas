@@ -152,7 +152,7 @@ function Products() {
           </div>
 
           <p className="text-center text-xs text-slate-500 mb-10">
-            Showing {filteredProducts.length} of {totalProductCount} product lines
+            Showing {filteredProducts.length} of {allProducts.length} product lines
           </p>
 
           {/* Product Grid */}
