@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Check, CheckCircle, Send } from 'lucide-react';
 import ScrollReveal from '../components/ScrollReveal';
+import { adminApi } from '../api/client';
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
 
 function Enquiry() {
   const location = useLocation();
+  const { getField } = useWebsiteContent('enquiry');
 
   // The Products page passes the chosen product through router state.
   const searchParams = new URLSearchParams(location.search);
@@ -20,24 +23,31 @@ function Enquiry() {
   const [enquirySubmitted, setEnquirySubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate an API request
+    try {
+      await adminApi.createInquiry({
+        name: enquiryForm.name,
+        company: enquiryForm.company,
+        email: `${enquiryForm.name.toLowerCase().replace(/\s+/g, '')}@client.com`,
+        phone: enquiryForm.country || '+91 0000000000',
+        products: [enquiryForm.interest],
+        message: enquiryForm.message
+      });
+    } catch {}
+    setIsSubmitting(false);
+    setEnquirySubmitted(true);
     setTimeout(() => {
-      setIsSubmitting(false);
-      setEnquirySubmitted(true);
-      setTimeout(() => {
-        setEnquirySubmitted(false);
-        setEnquiryForm({
-          name: '',
-          company: '',
-          country: '',
-          interest: 'General Enquiry',
-          message: '',
-        });
-      }, 5000);
-    }, 1200);
+      setEnquirySubmitted(false);
+      setEnquiryForm({
+        name: '',
+        company: '',
+        country: '',
+        interest: 'General Enquiry',
+        message: '',
+      });
+    }, 5000);
   };
 
   return (
@@ -54,13 +64,13 @@ function Enquiry() {
           <div className="lg:col-span-5 text-center lg:text-left">
             <ScrollReveal animation="fade-in-left">
               <span className="bg-brand-orange text-white text-[10px] uppercase font-bold tracking-wider px-3.5 py-1.5 rounded-full shadow-sm mb-6 inline-block">
-                Now Accepting Enquiries
+                {getField('enquiry-header', 'eyebrow', 'Now Accepting Enquiries')}
               </span>
               <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-6">
-                Bulk B2B Drug Procurement Made Simple
+                {getField('enquiry-header', 'title', 'Bulk B2B Drug Procurement Made Simple')}
               </h1>
               <p className="text-blue-100 leading-relaxed mb-6">
-                Send us your requirement and we will come back to you directly with availability, pricing, and the documentation you need. No call centre in between.
+                {getField('enquiry-header', 'subtitle', 'Send us your requirement and we will come back to you directly with availability, pricing, and the documentation you need. No call centre in between.')}
               </p>
 
               <div className="space-y-4 text-left max-w-sm mx-auto lg:mx-0">

@@ -15,6 +15,8 @@ import ScrollReveal from '../components/ScrollReveal';
 import { company, registrationDetails } from '../data/company';
 import { totalProductCount } from '../data/products';
 
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
+
 // Being new is a real trade-off. Saying so plainly beats pretending otherwise.
 const newCompanyReality = {
   advantages: [
@@ -49,13 +51,19 @@ const values = [
 ];
 
 function About() {
+  const { getField } = useWebsiteContent('about');
+
+  const image1 = getField('about-story', 'image1', 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80');
+  const image2 = getField('about-story', 'image2', 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?auto=format&fit=crop&w=600&q=80');
+  const image3 = getField('about-story', 'image3', 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=600&q=80');
+
   return (
     <>
       <PageHero
-        eyebrow="WHO WE ARE"
-        title="About Firmitas 1"
+        eyebrow={getField('about-header', 'eyebrow', 'WHO WE ARE')}
+        title={getField('about-header', 'title', 'About Firmitas 1')}
         breadcrumb="About Us"
-        description="A newly founded pharmaceutical distribution company built to supply licensed pharmacies, hospitals, clinics, and healthcare buyers."
+        description={getField('about-header', 'subtitle', 'A newly founded pharmaceutical distribution company built to supply licensed pharmacies, hospitals, clinics, and healthcare buyers.')}
       />
 
       <section className="py-12 md:py-20 bg-white relative">
@@ -70,14 +78,14 @@ function About() {
               <div className="space-y-4">
                 <ScrollReveal animation="fade-in-up" delay={0}>
                   <img
-                    src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80"
+                    src={image1}
                     alt="Clinical Research"
                     className="rounded-2xl shadow-md object-cover h-60 w-full hover:scale-[1.02] transition-transform duration-300"
                   />
                 </ScrollReveal>
                 <ScrollReveal animation="fade-in-up" delay={150}>
                   <img
-                    src="https://images.unsplash.com/photo-1532187643603-ba119ca4109e?auto=format&fit=crop&w=600&q=80"
+                    src={image2}
                     alt="Quality Laboratory"
                     className="rounded-2xl shadow-md object-cover h-40 w-full hover:scale-[1.02] transition-transform duration-300"
                   />
@@ -87,7 +95,7 @@ function About() {
               <div className="space-y-4 pt-8">
                 <ScrollReveal animation="fade-in-up" delay={100}>
                   <img
-                    src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=600&q=80"
+                    src={image3}
                     alt="Medical Warehouse"
                     className="rounded-2xl shadow-md object-cover h-40 w-full hover:scale-[1.02] transition-transform duration-300"
                   />

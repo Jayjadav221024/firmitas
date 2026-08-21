@@ -67,14 +67,18 @@ const storagePractices = [
   },
 ];
 
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
+
 function Compliance() {
+  const { getField } = useWebsiteContent('compliance');
+
   return (
     <>
       <PageHero
-        eyebrow="HOW WE WORK"
-        title="Our Sourcing & Quality Commitments"
+        eyebrow={getField('compliance-header', 'eyebrow', 'HOW WE WORK')}
+        title={getField('compliance-header', 'title', 'Our Sourcing & Quality Commitments')}
         breadcrumb="Compliance"
-        description="These are the standards we hold ourselves to on every consignment. We are happy to share supplier and batch documentation with any buyer before an order is confirmed."
+        description={getField('compliance-header', 'subtitle', 'These are the standards we hold ourselves to on every consignment. We are happy to share supplier and batch documentation with any buyer before an order is confirmed.')}
       />
 
       <section className="py-12 md:py-20 bg-white relative">

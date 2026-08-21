@@ -50,14 +50,18 @@ const buyerRequirements = [
   'Any specific manufacturer, brand or documentation preference',
 ];
 
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
+
 function WhyChooseUs() {
+  const { getField } = useWebsiteContent('why-choose-us');
+
   return (
     <>
       <PageHero
-        eyebrow="OUR STRENGTHS"
-        title="Why Healthcare Buyers Choose Firmitas 1"
+        eyebrow={getField('why-choose-header', 'eyebrow', 'OUR STRENGTHS')}
+        title={getField('why-choose-header', 'title', 'Why Healthcare Buyers Choose Firmitas 1')}
         breadcrumb="Why Choose Us"
-        description="Regulatory discipline, direct sourcing and a single point of contact — the things that actually decide whether a supply relationship works."
+        description={getField('why-choose-header', 'subtitle', 'Regulatory discipline, direct sourcing and a single point of contact — the things that actually decide whether a supply relationship works.')}
       />
 
       <section className="py-12 md:py-20 bg-white relative">

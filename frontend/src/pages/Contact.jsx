@@ -6,6 +6,8 @@ import ScrollReveal from '../components/ScrollReveal';
 import { company } from '../data/company';
 import { faqs } from '../data/faqs';
 
+import { useWebsiteContent } from '../hooks/useWebsiteContent';
+
 // Getting these into the first message usually removes a full round trip.
 const enquiryChecklist = [
   'Product or molecule name, with the strength you need',
@@ -18,6 +20,13 @@ const enquiryChecklist = [
 
 function Contact() {
   const [sent, setSent] = useState(false);
+  const { getField } = useWebsiteContent('contact');
+  const { getField: getSiteField } = useWebsiteContent('site-wide');
+
+  const phone = getSiteField('top-nav-bar', 'primaryPhone', company.phone);
+  const email = getSiteField('top-nav-bar', 'primaryEmail', company.email);
+  const hours = getSiteField('company-contact-details', 'workingHours', company.hours);
+  const address = getSiteField('company-contact-details', 'officeAddress', company.address?.full || 'Ahmedabad, Gujarat, India');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -29,10 +38,10 @@ function Contact() {
   return (
     <>
       <PageHero
-        eyebrow="CONTACT US"
-        title="Get in Touch"
+        eyebrow={getField('contact-header', 'eyebrow', 'CONTACT US')}
+        title={getField('contact-header', 'title', 'Get in Touch')}
         breadcrumb="Contact"
-        description="Reach us directly by phone, email, or the form below. The same person who takes your enquiry handles the quote and dispatch."
+        description={getField('contact-header', 'subtitle', 'Reach us directly by phone, email, or the form below. The same person who takes your enquiry handles the quote and dispatch.')}
       />
 
       <section className="py-12 md:py-20 bg-slate-50 relative">
