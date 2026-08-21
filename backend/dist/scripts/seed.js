@@ -38,25 +38,11 @@ async function seed() {
             Entities_js_1.Blog.deleteMany({}),
             Entities_js_1.JobOpening.deleteMany({})
         ]);
-        console.log('[Seed] Cleared collections.');
         // 1. Roles & Permissions
         const allModules = [
-            'dashboard',
-            'users',
-            'roles',
-            'email_setup',
-            'email_for',
-            'email_template',
-            'website_editor',
-            'products',
-            'categories',
-            'testimonials',
-            'faqs',
-            'blogs',
-            'inquiries',
-            'job_openings',
-            'job_applications',
-            'audit_logs'
+            'dashboard', 'users', 'roles', 'email_setup', 'email_for', 'email_template',
+            'website_editor', 'products', 'categories', 'testimonials', 'faqs', 'blogs',
+            'inquiries', 'job_openings', 'job_applications', 'audit_logs'
         ];
         const superAdminPermissions = {};
         const editorPermissions = {};
@@ -73,14 +59,14 @@ async function seed() {
         const superAdminRole = await Role_js_1.Role.create({
             name: 'Super Admin',
             key: 'super_admin',
-            description: 'Unrestricted access to all admin and website features',
+            description: 'Unrestricted access to all Firmitas admin and visual CMS controls',
             permissions: superAdminPermissions,
             isSystem: true
         });
-        const editorRole = await Role_js_1.Role.create({
-            name: 'Editor',
+        await Role_js_1.Role.create({
+            name: 'Content Manager',
             key: 'editor',
-            description: 'Can manage products, content, and inquiries without deleting system configurations',
+            description: 'Can manage pharmaceutical products, enquiries, and section content',
             permissions: editorPermissions,
             isSystem: false
         });
@@ -89,281 +75,247 @@ async function seed() {
         const superAdminHash = await bcryptjs_1.default.hash('Admin@123', salt);
         await User_js_1.User.create({
             name: 'Super Admin',
-            email: 'admin@shreerajtraders.com',
+            email: 'admin@firmitas.com',
             passwordHash: superAdminHash,
             role: superAdminRole._id,
             isActive: true,
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+            avatar: ''
         });
-        // 3. Brands
-        const brands = await Brand_js_1.Brand.insertMany([
-            { name: 'Siemens', slug: 'siemens' },
-            { name: 'CGL (Crompton Greaves)', slug: 'cgl' },
-            { name: 'Hindustan Electric', slug: 'hindustan-electric' },
-            { name: 'Shree Raj Traders', slug: 'shree-raj-traders' }
+        // 3. Brands / Manufacturers
+        await Brand_js_1.Brand.insertMany([
+            { name: 'Cipla', slug: 'cipla' },
+            { name: 'Sun Pharma', slug: 'sun-pharma' },
+            { name: 'Dr. Reddy’s', slug: 'dr-reddys' },
+            { name: 'Lupin', slug: 'lupin' },
+            { name: 'Mankind Pharma', slug: 'mankind' },
+            { name: 'Firmitas Healthcare', slug: 'firmitas-healthcare' }
         ]);
-        // 4. Categories
-        const categories = await Category_js_1.Category.insertMany([
-            { name: 'Switchgears', key: 'switchgears', displayOrder: 1, isActive: true },
-            { name: 'Motors', key: 'motors', displayOrder: 2, isActive: true },
-            { name: 'FRP Gratings', key: 'frp-gratings', displayOrder: 3, isActive: true },
-            { name: 'FRP Cable Trays', key: 'frp-cable-trays', displayOrder: 4, isActive: true }
+        // 4. Categories (Firmitas 4 supply divisions)
+        await Category_js_1.Category.insertMany([
+            { name: 'Ethical & Generics', key: 'ethical', displayOrder: 1, isActive: true },
+            { name: 'Surgical & Hospital Supplies', key: 'surgical', displayOrder: 2, isActive: true },
+            { name: 'OTC Products', key: 'otc', displayOrder: 3, isActive: true },
+            { name: 'Critical Care', key: 'critical', displayOrder: 4, isActive: true }
         ]);
-        // 5. Products (Matching user's exact sample items)
-        const sampleProducts = [
+        // 5. Products (Firmitas actual pharmaceutical products catalog)
+        const firmitasProducts = [
             {
                 srNo: 1,
-                name: 'Low Voltage Control Product',
-                brandName: 'Siemens',
-                categoryKey: 'switchgears',
-                slug: 'low-voltage-control-product',
+                name: 'Paracetamol Tablets IP',
+                brandName: 'Firmitas Healthcare',
+                categoryKey: 'ethical',
+                slug: 'paracetamol-tablets-ip',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-                images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800'],
-                description: 'Siemens Sirius Low Voltage industrial control components for power distribution and machinery safety.',
-                metaTitle: 'Siemens Low Voltage Control Product - Shreeraj Traders',
-                metaDescription: 'Authorized Siemens Low Voltage Control distributor in Ahmedabad.'
+                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200',
+                images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'],
+                description: 'Paracetamol 500 mg / 650 mg. Analgesic and antipyretic for fever and mild to moderate pain. 10 x 10 Blister.',
+                metaTitle: 'Paracetamol Tablets IP - Firmitas Pharmaceuticals',
+                metaDescription: 'Bulk B2B distributor of Paracetamol Tablets IP.'
             },
             {
                 srNo: 2,
-                name: 'MCB',
-                brandName: 'Siemens',
-                categoryKey: 'switchgears',
-                slug: 'mcb',
+                name: 'Amoxicillin + Clavulanic Acid Tablets',
+                brandName: 'Cipla',
+                categoryKey: 'ethical',
+                slug: 'amoxicillin-clavulanic-acid-tablets',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200',
-                images: ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800'],
-                description: 'High reliability miniature circuit breaker with instant trip mechanism and thermal protection.',
-                metaTitle: 'Siemens MCB Switches - Shreeraj Traders',
-                metaDescription: 'Top grade Siemens MCB miniature circuit breakers.'
+                image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=200',
+                images: ['https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=800'],
+                description: 'Amoxicillin 500 mg + Clavulanic Acid 125 mg. Beta-lactamase resistant antibiotic combination in 10 x 6 Blister.',
+                metaTitle: 'Amoxicillin + Clavulanic Acid Tablets - Firmitas',
+                metaDescription: 'High efficacy broad spectrum antibiotic tablets.'
             },
             {
                 srNo: 3,
-                name: 'Sinnova',
-                brandName: 'Siemens',
-                categoryKey: 'switchgears',
-                slug: 'sinnova',
+                name: 'Azithromycin Tablets IP',
+                brandName: 'Sun Pharma',
+                categoryKey: 'ethical',
+                slug: 'azithromycin-tablets-ip',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=200',
-                images: ['https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800'],
-                description: 'Siemens Sinnova range offering premium modular switchgear and electrical protection.',
-                metaTitle: 'Siemens Sinnova Switchgear - Shreeraj Traders',
-                metaDescription: 'Sinnova modular electrical switchgear.'
+                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200',
+                images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'],
+                description: 'Azithromycin 250 mg / 500 mg. Macrolide antibiotic for respiratory and soft tissue infections.',
+                metaTitle: 'Azithromycin Tablets IP - Firmitas',
+                metaDescription: 'Macrolide antibiotic formulations for hospital and pharmacy supply.'
             },
             {
                 srNo: 4,
-                name: 'Siemens Motor',
-                brandName: 'Siemens',
-                categoryKey: 'motors',
-                slug: 'siemens-motor',
+                name: 'Disposable Syringes with Needle',
+                brandName: 'Firmitas Healthcare',
+                categoryKey: 'surgical',
+                slug: 'disposable-syringes-with-needle',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=200',
-                images: ['https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=800'],
-                description: 'Energy efficient 3-phase AC induction motors for severe duty industrial applications.',
-                metaTitle: 'Siemens Electric Motors - Shreeraj Traders',
-                metaDescription: 'IE2, IE3, and IE4 high efficiency Siemens motors.'
+                image: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=200',
+                images: ['https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800'],
+                description: 'Sterile, single use — 1 ml / 2 ml / 5 ml / 10 ml / 20 ml with ultra-sharp needles. Box of 100.',
+                metaTitle: 'Disposable Syringes - Firmitas Surgical',
+                metaDescription: 'Sterile surgical disposable syringes with needle.'
             },
             {
                 srNo: 5,
-                name: 'Hindustan Electric Motor',
-                brandName: 'Hindustan Electric',
-                categoryKey: 'motors',
-                slug: 'hindustan-electric-motor',
+                name: 'IV Cannula with Injection Port',
+                brandName: 'Firmitas Healthcare',
+                categoryKey: 'surgical',
+                slug: 'iv-cannula-with-injection-port',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=200',
-                images: ['https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800'],
-                description: 'Heavy duty Hindustan Electric motors engineered for Indian industrial conditions.',
-                metaTitle: 'Hindustan Electric Motors Supplier - Shreeraj Traders',
-                metaDescription: 'Durable Hindustan Electric 3-phase induction motors.'
+                image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=200',
+                images: ['https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800'],
+                description: 'Sizes 18G / 20G / 22G / 24G / 26G sterile intravenous cannulation with colour-coded wings.',
+                metaTitle: 'IV Cannula with Port - Firmitas',
+                metaDescription: 'Medical grade IV cannula sizes 18G to 26G.'
             },
             {
                 srNo: 6,
-                name: 'Checkered Plate',
-                brandName: 'Shree Raj Traders',
-                categoryKey: 'frp-gratings',
-                slug: 'cheker-plate',
+                name: 'Absorbent Cotton Wool IP',
+                brandName: 'Firmitas Healthcare',
+                categoryKey: 'surgical',
+                slug: 'absorbent-cotton-wool-ip',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200',
-                images: ['https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800'],
-                description: 'High-strength anti-skid FRP checkered plate for walkway flooring and chemical environments.',
-                metaTitle: 'FRP Checkered Plate - Shreeraj Traders',
-                metaDescription: 'Corrosion-resistant FRP checkered plate.'
+                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200',
+                images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'],
+                description: '100% Pure Absorbent Cotton, Sterile & Non-sterile 500g roll for wound care and clinical prep.',
+                metaTitle: 'Absorbent Cotton Wool IP - Firmitas',
+                metaDescription: 'High absorbency hospital grade cotton rolls.'
             },
             {
                 srNo: 7,
-                name: 'Ladder Type Cable Tray',
-                brandName: 'Shree Raj Traders',
-                categoryKey: 'frp-cable-trays',
-                slug: 'ladder-type-cable-tray',
+                name: 'Multivitamin & Mineral Capsules',
+                brandName: 'Dr. Reddy’s',
+                categoryKey: 'otc',
+                slug: 'multivitamin-mineral-capsules',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=200',
-                images: ['https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800'],
-                description: 'FRP Ladder type cable management trays engineered for heavy cable loading and aggressive atmospheres.',
-                metaTitle: 'Ladder Type FRP Cable Tray - Shreeraj Traders',
-                metaDescription: 'Heavy-duty fiberglass ladder cable trays.'
+                image: 'https://images.unsplash.com/photo-1550572017-ed200f5e6343?w=200',
+                images: ['https://images.unsplash.com/photo-1550572017-ed200f5e6343?w=800'],
+                description: 'Essential Vitamins A, C, D3, E, B-Complex + Zinc. Daily immune function supplement.',
+                metaTitle: 'Multivitamin & Mineral Capsules - Firmitas OTC',
+                metaDescription: 'Complete health and multivitamin capsules for retail pharmacy.'
             },
             {
                 srNo: 8,
-                name: 'Crompton Greaves Motor',
-                brandName: 'CGL (Crompton Greaves)',
-                categoryKey: 'motors',
-                slug: 'crompton-greaves-motor',
+                name: 'ORS Powder (WHO Formula)',
+                brandName: 'Mankind Pharma',
+                categoryKey: 'otc',
+                slug: 'ors-powder-who-formula',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-                images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800'],
-                description: 'Crompton Greaves energy efficient motors for pumps, blowers, and manufacturing plants.',
-                metaTitle: 'Crompton Greaves Motor - Shreeraj Traders',
-                metaDescription: 'CGL high efficiency motors distributor.'
+                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200',
+                images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'],
+                description: 'Oral Rehydration Salts, WHO recommended formula for electrolyte replacement. Box of 100.',
+                metaTitle: 'ORS Powder WHO Formula - Firmitas',
+                metaDescription: 'WHO formula Oral Rehydration Salts.'
             },
             {
                 srNo: 9,
-                name: 'Grit Top',
-                brandName: 'Shree Raj Traders',
-                categoryKey: 'frp-gratings',
-                slug: 'grit-top',
+                name: 'Human Insulin Injection',
+                brandName: 'Cipla',
+                categoryKey: 'critical',
+                slug: 'human-insulin-injection',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200',
-                images: ['https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800'],
-                description: 'Molded FRP grating with quartz grit anti-slip surface for offshore and oil & gas facilities.',
-                metaTitle: 'FRP Grit Top Grating - Shreeraj Traders',
-                metaDescription: 'Grit top non-slip composite grating.'
+                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200',
+                images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'],
+                description: 'Human Insulin 40 IU/ml (100 IU/ml available). Supplied under strict validated cold chain (2°C - 8°C).',
+                metaTitle: 'Human Insulin Injection - Firmitas Critical Care',
+                metaDescription: 'Cold chain verified insulin supplies for hospital and ICU.'
             },
             {
                 srNo: 10,
-                name: 'Perforated Cable Tray',
-                brandName: 'Shree Raj Traders',
-                categoryKey: 'frp-cable-trays',
-                slug: 'perforated-cable-tray',
+                name: 'Adrenaline Injection IP',
+                brandName: 'Firmitas Healthcare',
+                categoryKey: 'critical',
+                slug: 'adrenaline-injection-ip',
                 status: 'active',
-                image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=200',
-                images: ['https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800'],
-                description: 'Fiberglass reinforced polymer perforated trays for power and telecommunication cabling.',
-                metaTitle: 'Perforated FRP Cable Tray - Shreeraj Traders',
-                metaDescription: 'Corrosion proof perforated cable trays.'
-            },
-            {
-                srNo: 11,
-                name: 'Meniscus Top',
-                brandName: 'Shree Raj Traders',
-                categoryKey: 'frp-gratings',
-                slug: 'meniscus-top',
-                status: 'active',
-                image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200',
-                images: ['https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800'],
-                description: 'Standard concave meniscus surface molded grating for industrial drainage and platform walkways.',
-                metaTitle: 'Meniscus Top FRP Grating - Shreeraj Traders',
-                metaDescription: 'Meniscus top FRP grating.'
+                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200',
+                images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'],
+                description: 'Adrenaline 1 mg/ml (1:1000). Emergency management of anaphylaxis and cardiac arrest.',
+                metaTitle: 'Adrenaline Injection IP - Firmitas',
+                metaDescription: 'Emergency ICU resuscitation adrenaline ampoules.'
             }
         ];
-        await Product_js_1.Product.insertMany(sampleProducts);
-        // 6. Website Editor Pages & Dynamic Section Schemas
+        await Product_js_1.Product.insertMany(firmitasProducts);
+        // 6. Website Editor Pages & Dynamic Section Schemas for Firmitas
         const pagesData = [
             { key: 'seo', name: 'SEO', route: '/', displayOrder: 1 },
             { key: 'site-wide', name: 'SITE-WIDE', route: '/', displayOrder: 2 },
             { key: 'home', name: 'HOME PAGE', route: '/', displayOrder: 3 },
             { key: 'about', name: 'ABOUT US', route: '/about', displayOrder: 4 },
-            { key: 'products', name: 'PRODUCTS', route: '/products', displayOrder: 5 },
-            { key: 'contact', name: 'CONTACT', route: '/contact', displayOrder: 6 },
-            { key: 'blog', name: 'BLOG', route: '/blogs', displayOrder: 7 },
-            { key: 'gallery', name: 'GALLERY', route: '/gallery', displayOrder: 8 },
-            { key: 'careers', name: 'CAREERS', route: '/careers', displayOrder: 9 },
-            { key: 'locations', name: 'LOCATIONS', route: '/locations', displayOrder: 10 },
-            { key: 'city-landing', name: 'CITY LANDING', route: '/cities/ahmedabad', displayOrder: 11 }
+            { key: 'categories', name: 'CATEGORIES', route: '/categories', displayOrder: 5 },
+            { key: 'products', name: 'PRODUCTS', route: '/products', displayOrder: 6 },
+            { key: 'why-choose-us', name: 'WHY CHOOSE US', route: '/why-choose-us', displayOrder: 7 },
+            { key: 'compliance', name: 'COMPLIANCE', route: '/compliance', displayOrder: 8 },
+            { key: 'contact', name: 'CONTACT', route: '/contact', displayOrder: 9 },
+            { key: 'enquiry', name: 'ENQUIRY / RFQ', route: '/enquiry', displayOrder: 10 }
         ];
         await WebsiteEditor_js_1.Page.insertMany(pagesData);
-        // Create Section Schemas & Contents for Site-Wide and Home Page
-        const sectionsToCreate = [
-            // Site-Wide Sections
+        // Dynamic Sections for Firmitas
+        const firmitasSections = [
             {
                 pageKey: 'site-wide',
                 key: 'top-nav-bar',
-                name: 'Top navigation bar',
-                description: 'Logo wordmark, menu labels and the "Get Quote" button.',
+                name: 'Top navigation & Header bar',
+                description: 'Controls Firmitas branding, quick phone contact, and "Enquire Now" CTA.',
                 order: 1,
                 fields: [
-                    { key: 'brandTitle', label: 'Brand Title', type: 'text' },
-                    { key: 'partnerSubtitle', label: 'Partners Subtitle', type: 'text' },
-                    { key: 'ctaButtonText', label: 'CTA Button Text', type: 'text' },
-                    { key: 'ctaPhoneNumber', label: 'Emergency Hotline / Phone', type: 'text' }
+                    { key: 'brandTitle', label: 'Brand Name', type: 'text' },
+                    { key: 'tagline', label: 'Header Tagline', type: 'text' },
+                    { key: 'hotlinePhone', label: 'Hotline / WhatsApp Number', type: 'text' },
+                    { key: 'enquiryButtonText', label: 'CTA Button Text', type: 'text' }
                 ],
                 defaultData: {
-                    brandTitle: 'SHREE RAJ TRADERS',
-                    partnerSubtitle: 'SIEMENS · CGL · HINDUSTAN ELECTRIC',
-                    ctaButtonText: 'GET QUOTE',
-                    ctaPhoneNumber: '+91-97267 88690'
+                    brandTitle: 'Firmitas 1',
+                    tagline: 'PHARMACEUTICAL & HEALTHCARE DISTRIBUTOR',
+                    hotlinePhone: '+91 98250 00000',
+                    enquiryButtonText: 'Request Quote'
                 },
-                isEdited: true // Exactly matching user's screenshot showing EDITED badge
+                isEdited: true
             },
             {
                 pageKey: 'site-wide',
                 key: 'company-contact-details',
-                name: 'Company contact details',
-                description: 'Phone numbers, email addresses and the office address. Used by the header, footer, contact page and every city page at once.',
+                name: 'Company compliance & Contact info',
+                description: 'Drug licence numbers, registered office address, email and GST details.',
                 order: 2,
                 fields: [
-                    { key: 'officeAddress', label: 'Office Address', type: 'textarea' },
-                    { key: 'primaryEmail', label: 'Primary Email', type: 'text' },
-                    { key: 'salesPhone', label: 'Sales Contact Phone', type: 'text' },
-                    { key: 'workingHours', label: 'Working Hours', type: 'text' }
+                    { key: 'registeredAddress', label: 'Warehouse / Office Address', type: 'textarea' },
+                    { key: 'primaryEmail', label: 'Orders & Enquiries Email', type: 'text' },
+                    { key: 'drugLicenceNo', label: 'Drug Licence Numbers', type: 'text' },
+                    { key: 'gstin', label: 'GSTIN Number', type: 'text' }
                 ],
                 defaultData: {
-                    officeAddress: '104, Sakar-III, Near Income Tax Circle, Ashram Road, Ahmedabad, Gujarat 380014',
-                    primaryEmail: 'sales@shreerajtraders.com',
-                    salesPhone: '+91 98250 12345',
-                    workingHours: 'Mon - Sat: 9:30 AM to 7:00 PM'
+                    registeredAddress: 'Firmitas Healthcare Logistics Hub, Plot 42, GIDC Industrial Estate, Ahmedabad, Gujarat',
+                    primaryEmail: 'supply@firmitas.com',
+                    drugLicenceNo: 'Form 20B / 21B: GJ-AHM-123456 / 123457',
+                    gstin: '24AAACF1234F1Z9'
                 },
                 isEdited: false
             },
-            {
-                pageKey: 'site-wide',
-                key: 'footer-content',
-                name: 'Footer & Copyright bar',
-                description: 'Footer disclaimer, accreditation seals, quick links and copyright notice.',
-                order: 3,
-                fields: [
-                    { key: 'copyrightText', label: 'Copyright Text', type: 'text' },
-                    { key: 'gstin', label: 'GSTIN Number', type: 'text' },
-                    { key: 'cin', label: 'Company CIN / Reg', type: 'text' }
-                ],
-                defaultData: {
-                    copyrightText: '© 2026 Shree Raj Traders. All Rights Reserved.',
-                    gstin: '24AAAAA0000A1Z5',
-                    cin: 'U51909GJ2005PTC045678'
-                },
-                isEdited: false
-            },
-            // Home Page Sections
             {
                 pageKey: 'home',
                 key: 'hero-banner',
-                name: 'Hero Banner & Value Proposition',
-                description: 'Main hero headline, authorized channel partner badge, description paragraph and primary CTAs.',
+                name: 'Home Hero & Value Proposition',
+                description: 'Main banner headline, accept bulk enquiry badge, lead description, and CTAs.',
                 order: 1,
                 fields: [
-                    { key: 'partnerBadge', label: 'Partner Badge Text', type: 'text' },
-                    { key: 'mainHeadingLine1', label: 'Headline Line 1', type: 'text' },
-                    { key: 'highlightHeadingLine2', label: 'Headline Line 2 (Highlighted)', type: 'text' },
-                    { key: 'mainHeadingLine3', label: 'Headline Line 3', type: 'text' },
-                    { key: 'subheading', label: 'Lead Paragraph / Subheading', type: 'textarea' },
-                    { key: 'primaryCtaText', label: 'Primary CTA Button', type: 'text' },
-                    { key: 'secondaryCtaPhone', label: 'Secondary Call Button', type: 'text' }
+                    { key: 'badgeText', label: 'Announcement Badge', type: 'text' },
+                    { key: 'heroHeadingLine1', label: 'Hero Heading Line 1', type: 'text' },
+                    { key: 'heroHeadingHighlight', label: 'Hero Heading (Gradient / Highlight)', type: 'text' },
+                    { key: 'heroSubtitle', label: 'Hero Subtitle / Description', type: 'textarea' },
+                    { key: 'primaryCta', label: 'Primary Button Label', type: 'text' },
+                    { key: 'secondaryCta', label: 'Secondary Button Label', type: 'text' }
                 ],
                 defaultData: {
-                    partnerBadge: 'AUTHORIZED CHANNEL PARTNER · OVER SIX DECADES',
-                    mainHeadingLine1: 'SWITCHGEARS, MOTORS &',
-                    highlightHeadingLine2: 'FRP PRODUCTS',
-                    mainHeadingLine3: 'FOR INDIAN INDUSTRY',
-                    subheading: 'Welcome to Shree Raj Traders — a trusted Siemens switchgear supplier in Ahmedabad and authorized channel partner for motors, gearboxes, switchgear, and FRP cable trays and gratings.',
-                    primaryCtaText: 'REQUEST A QUOTE',
-                    secondaryCtaPhone: '+91-97267 88690'
+                    badgeText: 'Newly Founded · Now Accepting Bulk Enquiries',
+                    heroHeadingLine1: 'Complete Pharmacy',
+                    heroHeadingHighlight: 'Solutions',
+                    heroSubtitle: 'Firmitas 1 is a newly founded pharmaceutical distributor supplying ethical drugs, surgical essentials, critical care medicines, and OTC products to pharmacies, hospitals, and clinics. Tell us what you need and we will quote it.',
+                    primaryCta: 'Request Bulk Quote',
+                    secondaryCta: 'View Catalog'
                 },
                 isEdited: false
             },
             {
                 pageKey: 'home',
-                key: 'key-stats',
-                name: 'Key Metrics & Experience Highlights',
-                description: '4-column achievement stats counter bar.',
+                key: 'stats-strip',
+                name: 'Supply Metrics & Experience Counter',
+                description: '4-column highlights: Supply Divisions, Audited Sourcing, 0 Rigid Minimums, 24h Quote Turnaround.',
                 order: 2,
                 fields: [
                     { key: 'stat1Value', label: 'Stat 1 Value', type: 'text' },
@@ -376,35 +328,19 @@ async function seed() {
                     { key: 'stat4Label', label: 'Stat 4 Label', type: 'text' }
                 ],
                 defaultData: {
-                    stat1Value: '60+',
-                    stat1Label: 'Years in Distribution',
-                    stat2Value: '10,000+',
-                    stat2Label: 'Industrial Clients Served',
-                    stat3Value: '100%',
-                    stat3Label: 'Genuine OEM Backed Products',
-                    stat4Value: '24-48 hrs',
-                    stat4Label: 'Dispatch for Ready Stock'
-                },
-                isEdited: false
-            },
-            {
-                pageKey: 'home',
-                key: 'product-categories-grid',
-                name: 'Featured Categories Showcase',
-                description: 'Highlights Switchgear, Motors, and FRP products with quick inquiry links.',
-                order: 3,
-                fields: [
-                    { key: 'sectionTitle', label: 'Section Title', type: 'text' },
-                    { key: 'sectionSubtitle', label: 'Section Subtitle', type: 'textarea' }
-                ],
-                defaultData: {
-                    sectionTitle: 'Engineered Products from Global Leaders',
-                    sectionSubtitle: 'Direct factory supply of low voltage switchgears, energy-efficient induction motors, and corrosion-resistant FRP infrastructure components.'
+                    stat1Value: '4+',
+                    stat1Label: 'Supply Divisions',
+                    stat2Value: '100%',
+                    stat2Label: 'Audited Sourcing',
+                    stat3Value: '0',
+                    stat3Label: 'Rigid Minimums',
+                    stat4Value: '24h',
+                    stat4Label: 'Quote Turnaround'
                 },
                 isEdited: false
             }
         ];
-        for (const secData of sectionsToCreate) {
+        for (const secData of firmitasSections) {
             const sec = await WebsiteEditor_js_1.Section.create({
                 pageKey: secData.pageKey,
                 key: secData.key,
@@ -416,7 +352,7 @@ async function seed() {
             const published = { ...secData.defaultData };
             const draft = { ...secData.defaultData };
             if (secData.isEdited) {
-                draft.brandTitle = 'SHREE RAJ TRADERS - PVT LTD';
+                draft.brandTitle = 'Firmitas 1 - Pharma Logistics Hub';
             }
             await WebsiteEditor_js_1.SectionContent.create({
                 sectionId: sec._id,
@@ -435,68 +371,45 @@ async function seed() {
             host: 'smtp.gmail.com',
             port: 587,
             secure: false,
-            user: 'notifications@shreerajtraders.com',
+            user: 'orders@firmitas.com',
             pass: 'AppPassword123!',
-            fromName: 'Shreeraj Traders Admin',
-            fromEmail: 'sales@shreerajtraders.com',
+            fromName: 'Firmitas Admin Portal',
+            fromEmail: 'orders@firmitas.com',
             isConfigured: true
         });
         await Entities_js_1.EmailMapping.insertMany([
             {
                 eventKey: 'new_rfq',
-                eventName: 'New RFQ / Quote Inquiry',
-                description: 'Sent when a visitor submits a quote request on the website',
-                recipients: ['sales@shreerajtraders.com', 'admin@shreerajtraders.com'],
+                eventName: 'New Pharmaceutical Enquiry / Quote',
+                description: 'Sent when a hospital/pharmacy submits a quote request',
+                recipients: ['orders@firmitas.com', 'admin@firmitas.com'],
                 templateKey: 'rfq_notification',
-                isActive: true
-            },
-            {
-                eventKey: 'new_job_application',
-                eventName: 'New Job Application',
-                description: 'Sent when a candidate applies for an opening',
-                recipients: ['hr@shreerajtraders.com'],
-                templateKey: 'job_app_notification',
-                isActive: true
-            },
-            {
-                eventKey: 'admin_password_reset',
-                eventName: 'Admin Password Reset',
-                description: 'Password reset link sent to admin users',
-                recipients: ['{{userEmail}}'],
-                templateKey: 'password_reset',
                 isActive: true
             }
         ]);
         await Entities_js_1.EmailTemplate.insertMany([
             {
                 key: 'rfq_notification',
-                name: 'RFQ Inquiry Notification',
-                subject: 'New RFQ Received from {{customerName}} - {{company}}',
-                htmlBody: '<div style="font-family:sans-serif;padding:20px;"><h2>New RFQ Received</h2><p><strong>Name:</strong> {{customerName}}</p><p><strong>Company:</strong> {{company}}</p><p><strong>Email:</strong> {{email}}</p><p><strong>Phone:</strong> {{phone}}</p><p><strong>Products:</strong> {{productName}}</p><p><strong>Message:</strong> {{message}}</p></div>',
+                name: 'Firmitas RFQ Notification',
+                subject: 'New Bulk Quote Request: {{customerName}} ({{company}})',
+                htmlBody: '<div style="font-family:sans-serif;padding:20px;"><h2>New Medicine Quotation Request</h2><p><strong>Customer:</strong> {{customerName}}</p><p><strong>Entity:</strong> {{company}}</p><p><strong>Contact:</strong> {{email}} | {{phone}}</p><p><strong>Requirements:</strong> {{productName}}</p></div>',
                 variables: ['customerName', 'company', 'email', 'phone', 'productName', 'message']
-            },
-            {
-                key: 'job_app_notification',
-                name: 'Job Application Received',
-                subject: 'New Application for {{jobTitle}}: {{candidateName}}',
-                htmlBody: '<div style="font-family:sans-serif;padding:20px;"><h2>New Job Application</h2><p><strong>Position:</strong> {{jobTitle}}</p><p><strong>Candidate:</strong> {{candidateName}}</p><p><strong>Email:</strong> {{email}}</p><p><strong>Phone:</strong> {{phone}}</p><p><a href="{{resumeUrl}}">Download Resume</a></p></div>',
-                variables: ['jobTitle', 'candidateName', 'email', 'phone', 'resumeUrl']
             }
         ]);
-        // 8. Testimonials & FAQs & Jobs
+        // 8. Testimonials & FAQs
         await Entities_js_1.Testimonial.insertMany([
             {
-                name: 'Rajesh Patel',
-                company: 'Gujarat Heavy Chemicals Ltd.',
-                quote: 'Shree Raj Traders has been our exclusive Siemens switchgear & motor vendor for over 15 years. Instant delivery and authentic material.',
+                name: 'Dr. S. K. Mehta',
+                company: 'Apex Multi-Speciality Hospital',
+                quote: 'Firmitas supplies 100% verified batch documentation and genuine cold-chain maintenance for our emergency and ICU supplies.',
                 rating: 5,
                 isActive: true,
                 displayOrder: 1
             },
             {
-                name: 'Amit Shah',
-                company: 'Torrent Power Contractor Consortium',
-                quote: 'High quality FRP cable trays with zero defect rate. Passed all third-party flammability & load tests easily.',
+                name: 'Manoj Patel',
+                company: 'Sanjivani Chemist & Druggist',
+                quote: 'Prompt quotation and clear batch expiry details before billing. Dependable pharma distributor.',
                 rating: 5,
                 isActive: true,
                 displayOrder: 2
@@ -504,35 +417,25 @@ async function seed() {
         ]);
         await Entities_js_1.Faq.insertMany([
             {
-                question: 'Are all Siemens switchgears supplied with original test certificates?',
-                answer: 'Yes, every Siemens switchgear and motor is 100% factory original and comes with manufacturer warranty and test certificates.',
-                category: 'Switchgears',
+                question: 'What documents are required to place an order for prescription medicines?',
+                answer: 'Valid Wholesale / Retail Drug Licence (Form 20B / 21B) and GST Registration certificate are mandatory.',
+                category: 'Compliance',
                 displayOrder: 1,
                 isActive: true
             },
             {
-                question: 'What is the lead time for standard FRP cable trays & gratings?',
-                answer: 'Standard sizes are maintained in Ahmedabad warehouse ready for immediate 24-hour dispatch.',
-                category: 'FRP Products',
+                question: 'How is the cold-chain integrity verified for critical care items?',
+                answer: 'Cold chain medicines are dispatched in temperature-validated insulated shipper boxes with data-logged frozen gel packs maintained between 2°C to 8°C.',
+                category: 'Storage & Cold Chain',
                 displayOrder: 2,
                 isActive: true
             }
         ]);
-        await Entities_js_1.JobOpening.insertMany([
-            {
-                title: 'Industrial Sales Engineer (Switchgear & Motors)',
-                department: 'Sales & Business Development',
-                location: 'Ahmedabad, Gujarat',
-                description: 'Responsible for B2B client acquisition, OEM technical consultations, and quoting Siemens/CGL motors.',
-                requirements: ['B.E./Diploma in Electrical Engineering', '2+ years experience in industrial electrical sales'],
-                status: 'open'
-            }
-        ]);
-        console.log('✅ [Seed] Database seeded successfully with Shreeraj Traders data!');
+        console.log('✅ [Seed] Firmitas Database seeded successfully!');
         process.exit(0);
     }
     catch (err) {
-        console.error('❌ [Seed] Error during seeding:', err);
+        console.error('❌ [Seed] Error seeding Firmitas:', err);
         process.exit(1);
     }
 }
