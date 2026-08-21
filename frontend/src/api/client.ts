@@ -14,8 +14,20 @@ import {
   initialRoles
 } from '../services/adminDataService';
 
+const rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').trim().replace(/\/+$/, '');
+const normalizedBaseUrl = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  baseURL: normalizedBaseUrl
+});
+
+// Attach Authorization token to all outgoing requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('shreeraj_token');
+  if (token && token !== 'mock_superadmin_token_2026') {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // Custom fetcher with automatic fallback to full local Firmitas database
