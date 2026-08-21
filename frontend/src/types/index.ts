@@ -41,14 +41,23 @@ export interface User {
 
 export interface Product {
   id: string;
+  _id?: string;
   srNo?: number;
   image?: string;
   images?: string[];
   name: string;
   brandName: string;
   categoryKey: string;
+  category?: string;
   slug: string;
   status: 'active' | 'inactive';
+  composition?: string;
+  form?: string;
+  rxType?: string;
+  packaging?: string;
+  storage?: string;
+  therapeuticUse?: string;
+  use?: string;
   description?: string;
   metaTitle?: string;
   metaDescription?: string;

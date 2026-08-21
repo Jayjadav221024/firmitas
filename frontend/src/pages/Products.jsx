@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronRight,
   Search,
@@ -44,9 +44,10 @@ function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { getField } = useWebsiteContent('products');
 
-  const { data: rawProducts = productsData } = useQuery({
+  const { data: rawProducts = productsData, refetch } = useQuery({
     queryKey: ['public-catalog-products'],
     queryFn: async () => {
       const prods = await adminApi.getProducts();
@@ -55,19 +56,37 @@ function Products() {
     initialData: productsData
   });
 
-  // Normalise product structure whether from API or static file
-  const allProducts = rawProducts.map((p, idx) => ({
-    id: p.id || p._id || `prod-${idx}`,
-    name: p.name,
-    composition: p.composition || p.therapeuticUse || '',
-    category: p.category || p.categoryKey || 'ethical',
-    form: p.form || 'Tablet',
-    rxType: p.rxType || 'Rx',
-    packaging: p.packaging || 'Standard Pack',
-    storage: p.storage || 'Store in cool and dry place',
-    use: p.use || p.therapeuticUse || p.description || '',
-    coldChain: p.coldChain || (p.storage && p.storage.toLowerCase().includes('cold'))
-  }));
+  // Listen to instant storage and custom update events
+  useEffect(() => {
+    const handleUpdate = () => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
+    };
+
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('firmitas_products_updated', handleUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('firmitas_products_updated', handleUpdate);
+    };
+  }, [refetch, queryClient]);
+
+  // Normalise and filter active products
+  const allProducts = rawProducts
+    .filter((p) => p.status !== 'inactive')
+    .map((p, idx) => ({
+      id: p.id || p._id || `prod-${idx}`,
+      name: p.name,
+      composition: p.composition || p.therapeuticUse || '',
+      category: p.category || p.categoryKey || 'ethical',
+      form: p.form || 'Tablet',
+      rxType: p.rxType || 'Rx',
+      packaging: p.packaging || 'Standard Pack',
+      storage: p.storage || 'Store in cool and dry place',
+      use: p.use || p.therapeuticUse || p.description || '',
+      coldChain: p.coldChain || (p.storage && p.storage.toLowerCase().includes('cold'))
+    }));
 
   const productCountByCategory = allProducts.reduce((acc, p) => {
     acc[p.category] = (acc[p.category] || 0) + 1;

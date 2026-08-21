@@ -36,9 +36,15 @@ export const adminApi = {
   // PRODUCTS CRUD
   getProducts: async (params?: any) => {
     try {
-      const res = await api.get('/products', { params });
-      if (res.data?.data?.length > 0) return res.data.data;
-    } catch {}
+      const queryParams = { limit: 200, ...params };
+      const res = await api.get('/products', { params: queryParams });
+      if (res.data?.data?.length > 0) {
+        setStorage('products', res.data.data);
+        return res.data.data;
+      }
+    } catch (e) {
+      console.warn('API getProducts fallback to local store:', e);
+    }
     let items = getAdminData('products');
     if (params?.search) {
       const q = params.search.toLowerCase();
@@ -46,63 +52,93 @@ export const adminApi = {
         p.name?.toLowerCase().includes(q) ||
         p.brandName?.toLowerCase().includes(q) ||
         p.categoryKey?.toLowerCase().includes(q) ||
+        p.composition?.toLowerCase().includes(q) ||
         p.slug?.toLowerCase().includes(q)
       );
+    }
+    if (params?.category) {
+      items = items.filter((p: any) => p.categoryKey === params.category || p.category === params.category);
     }
     return items;
   },
 
   createProduct: async (product: any) => {
+    let createdProd = null;
     try {
-      await api.post('/products', product);
-    } catch {}
+      const res = await api.post('/products', product);
+      if (res.data?.data) {
+        createdProd = res.data.data;
+      }
+    } catch (e) {
+      console.warn('API createProduct error, using local persistence:', e);
+    }
+
     const items = getAdminData('products');
-    const newProd = {
+    const newProd = createdProd || {
       ...product,
       id: `prod-${Date.now()}`,
+      _id: `prod-${Date.now()}`,
       srNo: items.length + 1,
       slug: product.slug || product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      status: product.status || 'active'
+      status: product.status || 'active',
+      createdAt: new Date().toISOString()
     };
     items.unshift(newProd);
     setStorage('products', items);
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('firmitas_products_updated', { detail: newProd }));
     return newProd;
   },
 
   updateProduct: async (id: string, updates: any) => {
     try {
       await api.put(`/products/${id}`, updates);
-    } catch {}
+    } catch (e) {
+      console.warn('API updateProduct error, using local persistence:', e);
+    }
     const items = getAdminData('products');
-    const updated = items.map((p: any) => p.id === id ? { ...p, ...updates } : p);
+    const updated = items.map((p: any) => (p.id === id || p._id === id) ? { ...p, ...updates } : p);
     setStorage('products', updated);
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('firmitas_products_updated', { detail: { id, updates } }));
     return updates;
   },
 
   toggleProductStatus: async (id: string) => {
-    try {
-      await api.patch(`/products/${id}/toggle-status`);
-    } catch {}
-    const items = getAdminData('products');
     let newStatus = 'active';
+    const items = getAdminData('products');
+    const target = items.find((p: any) => p.id === id || p._id === id);
+    if (target) {
+      newStatus = target.status === 'active' ? 'inactive' : 'active';
+    }
+    try {
+      await api.patch(`/products/${id}/toggle-status`, { status: newStatus });
+    } catch (e) {
+      console.warn('API toggleProductStatus error:', e);
+    }
     const updated = items.map((p: any) => {
-      if (p.id === id) {
-        newStatus = p.status === 'active' ? 'inactive' : 'active';
+      if (p.id === id || p._id === id) {
         return { ...p, status: newStatus };
       }
       return p;
     });
     setStorage('products', updated);
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('firmitas_products_updated'));
     return { status: newStatus };
   },
 
   deleteProduct: async (id: string) => {
     try {
       await api.delete(`/products/${id}`);
-    } catch {}
+    } catch (e) {
+      console.warn('API deleteProduct error:', e);
+    }
     const items = getAdminData('products');
-    const filtered = items.filter((p: any) => p.id !== id);
+    const filtered = items.filter((p: any) => p.id !== id && p._id !== id);
     setStorage('products', filtered);
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('firmitas_products_updated'));
     return { success: true };
   },
 

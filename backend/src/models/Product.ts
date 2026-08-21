@@ -7,6 +7,12 @@ export interface IProduct extends Document {
   categoryKey: string;
   slug: string;
   status: 'active' | 'inactive';
+  composition?: string;
+  form?: string;
+  rxType?: string;
+  packaging?: string;
+  storage?: string;
+  therapeuticUse?: string;
   image?: string;
   images: string[];
   description?: string;
@@ -21,10 +27,16 @@ const ProductSchema = new Schema<IProduct>(
   {
     srNo: { type: Number },
     name: { type: String, required: true, trim: true },
-    brandName: { type: String, required: true },
+    brandName: { type: String, default: 'Firmitas Healthcare' },
     categoryKey: { type: String, required: true, lowercase: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+    composition: { type: String, default: '' },
+    form: { type: String, default: 'Tablet' },
+    rxType: { type: String, default: 'Rx' },
+    packaging: { type: String, default: 'Standard Pack' },
+    storage: { type: String, default: 'Store in cool and dry place' },
+    therapeuticUse: { type: String, default: '' },
     image: { type: String, default: '' },
     images: [{ type: String }],
     description: { type: String, default: '' },

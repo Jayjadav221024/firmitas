@@ -34,12 +34,21 @@ export const getProducts = async (req: Request, res: Response) => {
 
     const formatted = products.map((p, index) => ({
       id: p._id,
+      _id: p._id,
       srNo: p.srNo || skip + index + 1,
       name: p.name,
-      brandName: p.brandName,
+      brandName: p.brandName || 'Firmitas Healthcare',
       categoryKey: p.categoryKey,
+      category: p.categoryKey,
       slug: p.slug,
       status: p.status,
+      composition: p.composition || '',
+      form: p.form || 'Tablet',
+      rxType: p.rxType || 'Rx',
+      packaging: p.packaging || 'Standard Pack',
+      storage: p.storage || 'Store in cool and dry place',
+      therapeuticUse: p.therapeuticUse || p.description || '',
+      use: p.therapeuticUse || p.description || '',
       image: p.image || (p.images && p.images[0]) || '',
       images: p.images || [],
       description: p.description,
@@ -75,9 +84,28 @@ export const getProductById = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, brandName, categoryKey, slug, status, image, images, description, metaTitle, metaDescription } = req.body;
+    const {
+      name,
+      brandName,
+      categoryKey,
+      category,
+      slug,
+      status,
+      composition,
+      form,
+      rxType,
+      packaging,
+      storage,
+      therapeuticUse,
+      image,
+      images,
+      description,
+      metaTitle,
+      metaDescription
+    } = req.body;
 
-    const cleanSlug = (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+    const catKey = (categoryKey || category || 'ethical').toLowerCase().trim();
+    const cleanSlug = (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) + '-' + Math.floor(Math.random() * 1000);
     const existing = await Product.findOne({ slug: cleanSlug });
     if (existing) {
       return res.status(400).json({ success: false, message: `Product slug '${cleanSlug}' already exists` });
@@ -87,13 +115,19 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
     const product = await Product.create({
       srNo: count + 1,
       name,
-      brandName,
-      categoryKey,
+      brandName: brandName || 'Firmitas Healthcare',
+      categoryKey: catKey,
       slug: cleanSlug,
       status: status || 'active',
+      composition: composition || '',
+      form: form || 'Tablet',
+      rxType: rxType || 'Rx',
+      packaging: packaging || 'Standard Pack',
+      storage: storage || 'Store in cool and dry place',
+      therapeuticUse: therapeuticUse || description || '',
       image: image || (images && images[0]) || '',
       images: images || (image ? [image] : []),
-      description: description || '',
+      description: description || therapeuticUse || '',
       metaTitle: metaTitle || name,
       metaDescription: metaDescription || description?.slice(0, 160) || ''
     });

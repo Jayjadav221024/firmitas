@@ -31,10 +31,16 @@ export const ProductsPage: React.FC = () => {
   // Form states
   const [formData, setFormData] = useState({
     name: '',
-    brandName: 'Siemens',
-    categoryKey: 'switchgears',
+    brandName: 'Firmitas Healthcare',
+    categoryKey: 'ethical',
     slug: '',
     status: 'active' as 'active' | 'inactive',
+    composition: '',
+    form: 'Tablet',
+    rxType: 'Rx',
+    packaging: '10 x 10 Blister (Box of 100)',
+    storage: 'Store below 25°C, protect from light',
+    therapeuticUse: '',
     image: '',
     description: '',
     metaTitle: '',
@@ -72,6 +78,7 @@ export const ProductsPage: React.FC = () => {
     onSuccess: (data) => {
       toast.success(`Status updated`);
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
     },
     onError: () => toast.error('Failed to toggle status')
   });
@@ -79,8 +86,9 @@ export const ProductsPage: React.FC = () => {
   // Save product mutation (Create / Update)
   const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      if (editingProduct?.id) {
-        return await adminApi.updateProduct(editingProduct.id, payload);
+      if (editingProduct?.id || (editingProduct as any)?._id) {
+        const id = editingProduct?.id || (editingProduct as any)?._id;
+        return await adminApi.updateProduct(id, payload);
       } else {
         return await adminApi.createProduct(payload);
       }
@@ -90,6 +98,7 @@ export const ProductsPage: React.FC = () => {
       setIsDrawerOpen(false);
       setEditingProduct(null);
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
     },
     onError: () => toast.error('Failed to save product')
   });
@@ -103,6 +112,7 @@ export const ProductsPage: React.FC = () => {
       toast.success('Product deleted successfully');
       setDeleteConfirmId(null);
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
     },
     onError: () => toast.error('Failed to delete product')
   });
@@ -111,10 +121,16 @@ export const ProductsPage: React.FC = () => {
     setEditingProduct(null);
     setFormData({
       name: '',
-      brandName: brands[0]?.name || 'Siemens',
-      categoryKey: categories[0]?.key || 'switchgears',
+      brandName: 'Firmitas Healthcare',
+      categoryKey: 'ethical',
       slug: '',
       status: 'active',
+      composition: '',
+      form: 'Tablet',
+      rxType: 'Rx',
+      packaging: '10 x 10 Blister (Box of 100)',
+      storage: 'Store below 25°C, protect from light',
+      therapeuticUse: '',
       image: '',
       description: '',
       metaTitle: '',
@@ -127,12 +143,18 @@ export const ProductsPage: React.FC = () => {
     setEditingProduct(p);
     setFormData({
       name: p.name,
-      brandName: p.brandName,
-      categoryKey: p.categoryKey,
+      brandName: p.brandName || 'Firmitas Healthcare',
+      categoryKey: p.categoryKey || p.category || 'ethical',
       slug: p.slug,
-      status: p.status,
+      status: p.status || 'active',
+      composition: p.composition || '',
+      form: p.form || 'Tablet',
+      rxType: p.rxType || 'Rx',
+      packaging: p.packaging || '10 x 10 Blister',
+      storage: p.storage || 'Store in cool and dry place',
+      therapeuticUse: p.therapeuticUse || p.use || p.description || '',
       image: p.image || '',
-      description: p.description || '',
+      description: p.description || p.therapeuticUse || '',
       metaTitle: p.metaTitle || '',
       metaDescription: p.metaDescription || ''
     });
@@ -336,7 +358,7 @@ export const ProductsPage: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={handleNameChange}
-                  placeholder="e.g. Siemens 3-Phase Induction Motor"
+                  placeholder="e.g. Paracetamol Tablets IP 650mg"
                   className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
@@ -344,7 +366,7 @@ export const ProductsPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Brand Name *
+                    Brand / Manufacturer *
                   </label>
                   <select
                     value={formData.brandName}
@@ -362,7 +384,7 @@ export const ProductsPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Category Key *
+                    Division / Category *
                   </label>
                   <select
                     value={formData.categoryKey}
@@ -379,6 +401,98 @@ export const ProductsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Composition / Active Molecule
+                </label>
+                <input
+                  type="text"
+                  value={formData.composition}
+                  onChange={(e) => setFormData({ ...formData, composition: e.target.value })}
+                  placeholder="e.g. Paracetamol 650 mg"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Dosage Form
+                  </label>
+                  <select
+                    value={formData.form}
+                    onChange={(e) => setFormData({ ...formData, form: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
+                  >
+                    <option value="Tablet">Tablet</option>
+                    <option value="Capsule">Capsule</option>
+                    <option value="Injection">Injection</option>
+                    <option value="IV Fluid">IV Fluid</option>
+                    <option value="Suspension">Suspension</option>
+                    <option value="Topical">Topical / Cream</option>
+                    <option value="Disposable">Disposable Device</option>
+                    <option value="Dressing">Dressing / Gauze</option>
+                    <option value="PPE">PPE / Gloves</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Rx Classification
+                  </label>
+                  <select
+                    value={formData.rxType}
+                    onChange={(e) => setFormData({ ...formData, rxType: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
+                  >
+                    <option value="Rx">Rx (Prescription)</option>
+                    <option value="OTC">OTC (Over the Counter)</option>
+                    <option value="Consumable">Consumable (Surgical/Device)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Packaging / Presentation
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.packaging}
+                    onChange={(e) => setFormData({ ...formData, packaging: e.target.value })}
+                    placeholder="e.g. 10 x 10 Blister (Box of 100)"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Storage Condition
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.storage}
+                    onChange={(e) => setFormData({ ...formData, storage: e.target.value })}
+                    placeholder="e.g. Store below 25°C / Cold chain 2°C–8°C"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Therapeutic Use / Indication
+                </label>
+                <input
+                  type="text"
+                  value={formData.therapeuticUse}
+                  onChange={(e) => setFormData({ ...formData, therapeuticUse: e.target.value })}
+                  placeholder="e.g. Analgesic and antipyretic for fever and pain relief."
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Slug URL (Auto-Generated / Unique) *
                 </label>
                 <input
@@ -386,33 +500,20 @@ export const ProductsPage: React.FC = () => {
                   required
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  placeholder="e.g. siemens-motor"
+                  placeholder="e.g. paracetamol-650-tablets"
                   className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white font-mono text-xs focus:outline-none focus:border-teal-500"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Image URL / S3 Path
+                  Image URL
                 </label>
                 <input
                   type="text"
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Detailed specifications, application notes..."
                   className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
                 />
               </div>
@@ -426,6 +527,7 @@ export const ProductsPage: React.FC = () => {
                     type="text"
                     value={formData.metaTitle}
                     onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                    placeholder="e.g. Paracetamol Tablets - Firmitas 1"
                     className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
                   />
                 </div>
@@ -438,8 +540,8 @@ export const ProductsPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full px-3.5 py-2 rounded-xl bg-[#161b26] border border-slate-700/80 text-white focus:outline-none focus:border-teal-500 text-xs"
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active">Active (Visible on Website)</option>
+                    <option value="inactive">Inactive (Hidden)</option>
                   </select>
                 </div>
               </div>
