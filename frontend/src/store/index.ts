@@ -39,8 +39,8 @@ const defaultSuperAdmin: User = {
 };
 
 export const useAuthStore = create<AuthState>((set, get) => {
-  const storedUser = localStorage.getItem('shreeraj_user');
-  const storedToken = localStorage.getItem('shreeraj_token');
+  const storedUser = localStorage.getItem('firmitas_user') || localStorage.getItem('shreeraj_user');
+  const storedToken = localStorage.getItem('firmitas_token') || localStorage.getItem('shreeraj_token');
 
   return {
     user: storedUser ? JSON.parse(storedUser) : defaultSuperAdmin,
@@ -48,12 +48,16 @@ export const useAuthStore = create<AuthState>((set, get) => {
     isAuthenticated: true,
 
     login: (token: string, user: User) => {
-      localStorage.setItem('shreeraj_token', token);
-      localStorage.setItem('shreeraj_user', JSON.stringify(user));
+      localStorage.setItem('firmitas_token', token);
+      localStorage.setItem('firmitas_user', JSON.stringify(user));
+      localStorage.removeItem('shreeraj_token');
+      localStorage.removeItem('shreeraj_user');
       set({ token, user, isAuthenticated: true });
     },
 
     logout: () => {
+      localStorage.removeItem('firmitas_token');
+      localStorage.removeItem('firmitas_user');
       localStorage.removeItem('shreeraj_token');
       localStorage.removeItem('shreeraj_user');
       set({ token: null, user: null, isAuthenticated: false });
