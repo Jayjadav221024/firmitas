@@ -1,14 +1,18 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { AdminSidebar } from './AdminSidebar';
 import { Bell, Moon, Sun, ChevronDown } from 'lucide-react';
 import { useAuthStore, useUIStore } from '../../store';
 import { Toaster } from 'sonner';
 
 export const AdminLayout: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { isDarkMode, toggleDarkMode } = useUIStore();
   const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
 
   // Format title from route
   const getPageTitle = () => {

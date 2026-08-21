@@ -12,6 +12,7 @@ import Enquiry from './pages/Enquiry';
 import NotFound from './pages/NotFound';
 
 import { AdminLayout } from './components/layout/AdminLayout';
+import { LoginPage } from './pages/Auth/LoginPage';
 import { ProductsPage } from './pages/Products/ProductsPage';
 import { WebsiteEditorPage } from './pages/WebsiteEditor/WebsiteEditorPage';
 import { CategoriesPage } from './pages/Categories/CategoriesPage';
@@ -52,6 +53,9 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/enquiry" element={<Enquiry />} />
         </Route>
+
+        {/* Admin Login */}
+        <Route path="/admin/login" element={<LoginPage />} />
 
         {/* Firmitas Admin Console & Visual CMS */}
         <Route path="/admin" element={<AdminLayout />}>
