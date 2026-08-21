@@ -1,18 +1,45 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Search, Snowflake, ShieldCheck } from 'lucide-react';
 import PageHero from '../components/PageHero';
 import CtaBand from '../components/CtaBand';
 import ScrollReveal from '../components/ScrollReveal';
-import { categories, productCountByCategory, totalProductCount } from '../data/products';
+import { categories, productCountByCategory as staticCounts, totalProductCount as staticTotal } from '../data/products';
+import { adminApi } from '../api/client';
 
 function Categories() {
+  const { data: rawProducts = [] } = useQuery({
+    queryKey: ['public-catalog-products'],
+    queryFn: async () => {
+      try {
+        const prods = await adminApi.getProducts();
+        return Array.isArray(prods) && prods.length > 0 ? prods : [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 0
+  });
+
+  const liveCounts = rawProducts.length > 0
+    ? rawProducts.filter(p => p.status !== 'inactive').reduce((acc, p) => {
+        const cat = p.categoryKey || p.category || 'ethical';
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+      }, {})
+    : staticCounts;
+
+  const totalLines = rawProducts.length > 0
+    ? rawProducts.filter(p => p.status !== 'inactive').length
+    : staticTotal;
+
   return (
     <>
       <PageHero
         eyebrow="PRODUCT SEGMENTS"
         title="Comprehensive B2B Supply Capabilities"
         breadcrumb="Categories"
-        description={`Four supply divisions covering ${totalProductCount} listed product lines, plus custom sourcing for anything not on the list.`}
+        description={`Four supply divisions covering ${totalLines} listed product lines, plus custom sourcing for anything not on the list.`}
       />
 
       <section className="py-12 md:py-20 bg-slate-50 relative overflow-hidden">
@@ -48,7 +75,7 @@ function Categories() {
                         <Icon size={28} />
                       </div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-full">
-                        {productCountByCategory[id]} lines listed
+                        {liveCounts[id] || 0} lines listed
                       </span>
                     </div>
 

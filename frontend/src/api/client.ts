@@ -44,7 +44,7 @@ api.interceptors.response.use(
     if (error?.response?.status === 401) {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
       localStorage.removeItem(USER_STORAGE_KEY);
-      if (!window.location.pathname.startsWith('/admin/login')) {
+      if (window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/admin/login')) {
         window.location.assign('/admin/login');
       }
     }

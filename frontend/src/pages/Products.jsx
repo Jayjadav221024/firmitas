@@ -50,10 +50,20 @@ function Products() {
   const { data: rawProducts = productsData, refetch } = useQuery({
     queryKey: ['public-catalog-products'],
     queryFn: async () => {
-      const prods = await adminApi.getProducts();
-      return prods && prods.length > 0 ? prods : productsData;
+      try {
+        const prods = await adminApi.getProducts();
+        if (Array.isArray(prods) && prods.length > 0) {
+          return prods;
+        }
+        return productsData;
+      } catch (err) {
+        console.warn('Failed to load products from API, showing static catalog:', err);
+        return productsData;
+      }
     },
-    initialData: productsData
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true
   });
 
   // Listen to instant storage and custom update events
