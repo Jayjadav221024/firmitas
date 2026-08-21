@@ -6,7 +6,7 @@ async function logAction(params) {
     try {
         await Entities_js_1.AuditLog.create({
             actor: params.actor || 'Super Admin',
-            actorEmail: params.actorEmail || 'admin@shreerajtraders.com',
+            actorEmail: params.actorEmail || '',
             action: params.action,
             module: params.module,
             targetId: params.targetId || '',

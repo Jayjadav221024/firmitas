@@ -37,7 +37,7 @@ export const CategoriesPage: React.FC = () => {
       setEditingCat(null);
       queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
-    onError: () => toast.error('Failed to save category')
+    onError: (e: any) => toast.error(e?.message || 'Failed to save category')
   });
 
   const deleteMutation = useMutation({
@@ -45,7 +45,8 @@ export const CategoriesPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Category deleted');
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete category')
   });
 
   const handleOpenCreate = () => {

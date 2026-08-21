@@ -126,7 +126,8 @@ export const JobOpeningsPage: React.FC = () => {
       setIsOpen(false);
       setEditingJob(null);
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save job opening')
   });
 
   const deleteMutation = useMutation({
@@ -134,7 +135,8 @@ export const JobOpeningsPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Job opening deleted');
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete job opening')
   });
 
   const handleOpenCreate = () => {
@@ -278,7 +280,8 @@ export const JobApplicationsPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Applicant status updated');
       queryClient.invalidateQueries({ queryKey: ['job-apps'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to update applicant status')
   });
 
   return (
@@ -342,7 +345,8 @@ export const InquiriesPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Inquiry status updated');
       queryClient.invalidateQueries({ queryKey: ['inquiries'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to update inquiry status')
   });
 
   return (
@@ -416,7 +420,8 @@ export const FAQsPage: React.FC = () => {
       toast.success(editingFaq ? 'FAQ updated' : 'FAQ created');
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: ['faqs'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save FAQ')
   });
 
   const deleteMutation = useMutation({
@@ -424,7 +429,8 @@ export const FAQsPage: React.FC = () => {
     onSuccess: () => {
       toast.success('FAQ deleted');
       queryClient.invalidateQueries({ queryKey: ['faqs'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete FAQ')
   });
 
   const handleOpenCreate = () => {
@@ -536,7 +542,8 @@ export const TestimonialsPage: React.FC = () => {
       toast.success(editingItem ? 'Testimonial updated' : 'Testimonial created');
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save testimonial')
   });
 
   const deleteMutation = useMutation({
@@ -544,7 +551,8 @@ export const TestimonialsPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Testimonial deleted');
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete testimonial')
   });
 
   const handleOpenCreate = () => {
@@ -661,7 +669,8 @@ export const BlogsPage: React.FC = () => {
       toast.success(editingBlog ? 'Article updated' : 'Article published');
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save article')
   });
 
   const deleteMutation = useMutation({
@@ -669,7 +678,8 @@ export const BlogsPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Article deleted');
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete article')
   });
 
   const handleOpenCreate = () => {

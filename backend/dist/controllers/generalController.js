@@ -4,6 +4,7 @@ exports.getAuditLogs = exports.saveEmailTemplate = exports.getEmailTemplates = e
 const Entities_js_1 = require("../models/Entities.js");
 const Product_js_1 = require("../models/Product.js");
 const WebsiteEditor_js_1 = require("../models/WebsiteEditor.js");
+const http_js_1 = require("../utils/http.js");
 // Dashboard Metrics
 const getDashboardStats = async (req, res) => {
     try {
@@ -65,8 +66,19 @@ exports.createInquiry = createInquiry;
 const updateInquiryStatus = async (req, res) => {
     try {
         const { id } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'Inquiry'))
+            return;
         const { status, assignedAdmin, notes } = req.body;
-        const inquiry = await Entities_js_1.Inquiry.findByIdAndUpdate(id, { status, assignedAdmin, notes }, { new: true });
+        const updates = {};
+        if (status !== undefined)
+            updates.status = status;
+        if (assignedAdmin !== undefined)
+            updates.assignedAdmin = assignedAdmin;
+        if (notes !== undefined)
+            updates.notes = notes;
+        const inquiry = await Entities_js_1.Inquiry.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+        if (!inquiry)
+            return res.status(404).json({ success: false, message: 'Inquiry not found' });
         return res.json({ success: true, data: inquiry });
     }
     catch (err) {
@@ -97,7 +109,11 @@ const createTestimonial = async (req, res) => {
 exports.createTestimonial = createTestimonial;
 const updateTestimonial = async (req, res) => {
     try {
-        const item = await Entities_js_1.Testimonial.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'Testimonial'))
+            return;
+        const item = await Entities_js_1.Testimonial.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        if (!item)
+            return res.status(404).json({ success: false, message: 'Testimonial not found' });
         return res.json({ success: true, data: item });
     }
     catch (err) {
@@ -107,7 +123,11 @@ const updateTestimonial = async (req, res) => {
 exports.updateTestimonial = updateTestimonial;
 const deleteTestimonial = async (req, res) => {
     try {
-        await Entities_js_1.Testimonial.findByIdAndDelete(req.params.id);
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'Testimonial'))
+            return;
+        const deleted = await Entities_js_1.Testimonial.findByIdAndDelete(req.params.id);
+        if (!deleted)
+            return res.status(404).json({ success: false, message: 'Testimonial not found' });
         return res.json({ success: true, message: 'Deleted' });
     }
     catch (err) {
@@ -138,7 +158,11 @@ const createFaq = async (req, res) => {
 exports.createFaq = createFaq;
 const updateFaq = async (req, res) => {
     try {
-        const faq = await Entities_js_1.Faq.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'FAQ'))
+            return;
+        const faq = await Entities_js_1.Faq.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        if (!faq)
+            return res.status(404).json({ success: false, message: 'FAQ not found' });
         return res.json({ success: true, data: faq });
     }
     catch (err) {
@@ -148,7 +172,11 @@ const updateFaq = async (req, res) => {
 exports.updateFaq = updateFaq;
 const deleteFaq = async (req, res) => {
     try {
-        await Entities_js_1.Faq.findByIdAndDelete(req.params.id);
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'FAQ'))
+            return;
+        const deleted = await Entities_js_1.Faq.findByIdAndDelete(req.params.id);
+        if (!deleted)
+            return res.status(404).json({ success: false, message: 'FAQ not found' });
         return res.json({ success: true, message: 'Deleted' });
     }
     catch (err) {
@@ -169,7 +197,18 @@ const getBlogs = async (req, res) => {
 exports.getBlogs = getBlogs;
 const createBlog = async (req, res) => {
     try {
-        const cleanSlug = req.body.slug || req.body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const { title, body } = req.body;
+        if (!title || !String(title).trim()) {
+            return res.status(400).json({ success: false, message: 'Article title is required' });
+        }
+        if (!body || !String(body).trim()) {
+            return res.status(400).json({ success: false, message: 'Article content is required' });
+        }
+        const cleanSlug = (0, http_js_1.slugify)(req.body.slug || title);
+        const existing = await Entities_js_1.Blog.findOne({ slug: cleanSlug });
+        if (existing) {
+            return res.status(400).json({ success: false, message: `Article slug '${cleanSlug}' already exists` });
+        }
         const blog = await Entities_js_1.Blog.create({ ...req.body, slug: cleanSlug });
         return res.status(201).json({ success: true, data: blog });
     }
@@ -180,7 +219,19 @@ const createBlog = async (req, res) => {
 exports.createBlog = createBlog;
 const updateBlog = async (req, res) => {
     try {
-        const blog = await Entities_js_1.Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'Article'))
+            return;
+        const updates = { ...req.body };
+        if (updates.slug) {
+            updates.slug = (0, http_js_1.slugify)(updates.slug);
+            const clash = await Entities_js_1.Blog.findOne({ slug: updates.slug, _id: { $ne: req.params.id } });
+            if (clash) {
+                return res.status(400).json({ success: false, message: `Article slug '${updates.slug}' already in use` });
+            }
+        }
+        const blog = await Entities_js_1.Blog.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+        if (!blog)
+            return res.status(404).json({ success: false, message: 'Article not found' });
         return res.json({ success: true, data: blog });
     }
     catch (err) {
@@ -190,7 +241,11 @@ const updateBlog = async (req, res) => {
 exports.updateBlog = updateBlog;
 const deleteBlog = async (req, res) => {
     try {
-        await Entities_js_1.Blog.findByIdAndDelete(req.params.id);
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'Article'))
+            return;
+        const deleted = await Entities_js_1.Blog.findByIdAndDelete(req.params.id);
+        if (!deleted)
+            return res.status(404).json({ success: false, message: 'Article not found' });
         return res.json({ success: true, message: 'Deleted' });
     }
     catch (err) {
@@ -221,7 +276,11 @@ const createJobOpening = async (req, res) => {
 exports.createJobOpening = createJobOpening;
 const updateJobOpening = async (req, res) => {
     try {
-        const job = await Entities_js_1.JobOpening.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'Job opening'))
+            return;
+        const job = await Entities_js_1.JobOpening.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        if (!job)
+            return res.status(404).json({ success: false, message: 'Job opening not found' });
         return res.json({ success: true, data: job });
     }
     catch (err) {
@@ -231,7 +290,11 @@ const updateJobOpening = async (req, res) => {
 exports.updateJobOpening = updateJobOpening;
 const deleteJobOpening = async (req, res) => {
     try {
-        await Entities_js_1.JobOpening.findByIdAndDelete(req.params.id);
+        if ((0, http_js_1.rejectInvalidId)(res, req.params.id, 'Job opening'))
+            return;
+        const deleted = await Entities_js_1.JobOpening.findByIdAndDelete(req.params.id);
+        if (!deleted)
+            return res.status(404).json({ success: false, message: 'Job opening not found' });
         return res.json({ success: true, message: 'Deleted' });
     }
     catch (err) {
@@ -252,8 +315,12 @@ exports.getJobApplications = getJobApplications;
 const updateJobApplicationStatus = async (req, res) => {
     try {
         const { id } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'Job application'))
+            return;
         const { status } = req.body;
-        const app = await Entities_js_1.JobApplication.findByIdAndUpdate(id, { status }, { new: true });
+        const app = await Entities_js_1.JobApplication.findByIdAndUpdate(id, { status }, { new: true, runValidators: true });
+        if (!app)
+            return res.status(404).json({ success: false, message: 'Job application not found' });
         return res.json({ success: true, data: app });
     }
     catch (err) {
@@ -266,13 +333,9 @@ const getEmailSetup = async (req, res) => {
     try {
         let setup = await Entities_js_1.EmailSetup.findOne();
         if (!setup) {
-            setup = await Entities_js_1.EmailSetup.create({
-                host: 'smtp.gmail.com',
-                port: 587,
-                fromName: 'Shreeraj Traders Admin',
-                fromEmail: 'info@shreerajtraders.com',
-                isConfigured: true
-            });
+            // Nothing configured yet — return an unconfigured shell so the form can
+            // render its empty state. Do not invent credentials.
+            setup = await Entities_js_1.EmailSetup.create({ isConfigured: false });
         }
         return res.json({
             success: true,
@@ -336,7 +399,11 @@ exports.getEmailMappings = getEmailMappings;
 const updateEmailMapping = async (req, res) => {
     try {
         const { id } = req.params;
-        const mapping = await Entities_js_1.EmailMapping.findByIdAndUpdate(id, req.body, { new: true });
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'Email mapping'))
+            return;
+        const mapping = await Entities_js_1.EmailMapping.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+        if (!mapping)
+            return res.status(404).json({ success: false, message: 'Email mapping not found' });
         return res.json({ success: true, data: mapping });
     }
     catch (err) {

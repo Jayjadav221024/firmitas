@@ -3,10 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
-import { AuthRequest } from '../middleware/auth.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'shreeraj_super_secret_jwt_key_2026';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'shreeraj_super_secret_refresh_jwt_key_2026';
+import { AuthRequest, getJwtSecret, getJwtRefreshSecret } from '../middleware/auth.js';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -30,17 +27,21 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const role = user.role as any;
+    if (!role) {
+      return res.status(403).json({ success: false, message: 'Account has no role assigned' });
+    }
+
     const tokenPayload = {
-      id: user._id,
+      id: String(user._id),
       email: user.email,
       name: user.name,
-      roleId: role._id,
+      roleId: String(role._id),
       roleKey: role.key,
       permissions: role.permissions
     };
 
-    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' });
-    const refreshToken = jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    const accessToken = jwt.sign(tokenPayload, getJwtSecret(), { expiresIn: '1d' });
+    const refreshToken = jwt.sign({ id: String(user._id) }, getJwtRefreshSecret(), { expiresIn: '7d' });
 
     user.refreshToken = refreshToken;
     await user.save();

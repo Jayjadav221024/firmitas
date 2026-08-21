@@ -28,7 +28,8 @@ export const AdminUsersPage: React.FC = () => {
 
   const handleOpenCreate = () => {
     setEditingUser(null);
-    setFormData({ name: '', email: '', password: '', roleId: roles[0]?.id || 'role-1', isActive: true });
+    // Default to the first real role from the backend; there is no placeholder id.
+    setFormData({ name: '', email: '', password: '', roleId: roles[0]?._id || roles[0]?.id || '', isActive: true });
     setIsOpen(true);
   };
 
@@ -56,7 +57,7 @@ export const AdminUsersPage: React.FC = () => {
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
-    onError: () => toast.error('Failed to save user')
+    onError: (e: any) => toast.error(e?.message || 'Failed to save user')
   });
 
   const deleteMutation = useMutation({
@@ -64,7 +65,8 @@ export const AdminUsersPage: React.FC = () => {
     onSuccess: () => {
       toast.success('User deleted');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete user')
   });
 
   return (

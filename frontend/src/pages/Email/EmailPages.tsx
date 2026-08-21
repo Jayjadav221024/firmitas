@@ -12,7 +12,7 @@ export const EmailSetupPage: React.FC = () => {
     user: '',
     pass: '',
     fromName: 'Firmitas 1 Pharma Admin',
-    fromEmail: 'sales@firmitas1.com'
+    fromEmail: ''
   });
 
   const { data: res, isLoading } = useQuery({
@@ -152,7 +152,7 @@ export const EmailForPage: React.FC = () => {
                   <p className="text-xs text-slate-400">{m.description}</p>
                 </td>
                 <td className="py-4 px-5 font-mono text-xs text-teal-300">
-                  {m.recipients?.join(', ') || 'sales@shreerajtraders.com'}
+                  {m.recipients?.join(', ') || '—'}
                 </td>
                 <td className="py-4 px-5 text-xs text-slate-300">{m.templateKey}</td>
                 <td className="py-4 px-4 text-center">

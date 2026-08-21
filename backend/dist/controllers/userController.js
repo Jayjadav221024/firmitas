@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const User_js_1 = require("../models/User.js");
 const Role_js_1 = require("../models/Role.js");
 const auditService_js_1 = require("../services/auditService.js");
+const http_js_1 = require("../utils/http.js");
 // Roles
 const getRoles = async (req, res) => {
     try {
@@ -47,6 +48,8 @@ exports.createRole = createRole;
 const updateRole = async (req, res) => {
     try {
         const { id } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'Role'))
+            return;
         const { name, description, permissions } = req.body;
         const role = await Role_js_1.Role.findById(id);
         if (!role)
@@ -80,6 +83,8 @@ exports.updateRole = updateRole;
 const deleteRole = async (req, res) => {
     try {
         const { id } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'Role'))
+            return;
         const role = await Role_js_1.Role.findById(id);
         if (!role)
             return res.status(404).json({ success: false, message: 'Role not found' });
@@ -119,11 +124,20 @@ exports.getUsers = getUsers;
 const createUser = async (req, res) => {
     try {
         const { name, email, password, roleId, isActive } = req.body;
+        if (!name || !email) {
+            return res.status(400).json({ success: false, message: 'Name and email are required' });
+        }
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'Password is required' });
+        }
+        if (!roleId || !(await Role_js_1.Role.exists({ _id: roleId }).catch(() => null))) {
+            return res.status(400).json({ success: false, message: 'A valid role must be selected' });
+        }
         const existing = await User_js_1.User.findOne({ email: email.toLowerCase() });
         if (existing)
             return res.status(400).json({ success: false, message: 'Email already registered' });
         const salt = await bcryptjs_1.default.genSalt(10);
-        const passwordHash = await bcryptjs_1.default.hash(password || 'Admin@12345', salt);
+        const passwordHash = await bcryptjs_1.default.hash(password, salt);
         const user = await User_js_1.User.create({
             name,
             email: email.toLowerCase(),
@@ -148,10 +162,15 @@ exports.createUser = createUser;
 const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'User'))
+            return;
         const { name, roleId, isActive, password } = req.body;
         const user = await User_js_1.User.findById(id);
         if (!user)
             return res.status(404).json({ success: false, message: 'User not found' });
+        if (roleId && !(await Role_js_1.Role.exists({ _id: roleId }).catch(() => null))) {
+            return res.status(400).json({ success: false, message: 'A valid role must be selected' });
+        }
         if (name)
             user.name = name;
         if (roleId)
@@ -180,7 +199,15 @@ exports.updateUser = updateUser;
 const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
-        await User_js_1.User.findByIdAndDelete(id);
+        if ((0, http_js_1.rejectInvalidId)(res, id, 'User'))
+            return;
+        // Don't let an admin delete the account they are signed in with.
+        if (req.user?.id === id) {
+            return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
+        }
+        const deleted = await User_js_1.User.findByIdAndDelete(id);
+        if (!deleted)
+            return res.status(404).json({ success: false, message: 'User not found' });
         return res.json({ success: true, message: 'User deleted' });
     }
     catch (err) {

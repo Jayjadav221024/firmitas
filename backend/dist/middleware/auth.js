@@ -4,39 +4,59 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkPermission = exports.authenticateJWT = void 0;
+exports.getJwtSecret = getJwtSecret;
+exports.getJwtRefreshSecret = getJwtRefreshSecret;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+/**
+ * Signing key for access tokens. There is deliberately no default: a fallback
+ * secret means anybody who has read the source can mint valid admin tokens.
+ */
+function getJwtSecret() {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not set. Refusing to issue or verify tokens.');
+    }
+    return secret;
+}
+function getJwtRefreshSecret() {
+    const secret = process.env.JWT_REFRESH_SECRET;
+    if (!secret) {
+        throw new Error('JWT_REFRESH_SECRET is not set. Refusing to issue refresh tokens.');
+    }
+    return secret;
+}
 const authenticateJWT = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ success: false, message: 'Authorization header missing or invalid' });
     }
-    const token = authHeader.split(' ')[1];
-    if (token === 'mock_superadmin_token_2026' || token.startsWith('token_demo_superadmin')) {
+    const token = authHeader.slice('Bearer '.length).trim();
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Authorization token missing' });
+    }
+    let secret;
+    try {
+        secret = getJwtSecret();
+    }
+    catch (err) {
+        console.error('[Auth]', err.message);
+        return res.status(500).json({ success: false, message: 'Server authentication is not configured' });
+    }
+    try {
+        // verify() only — never fall back to decode(). decode() does not check the
+        // signature, so it would accept a token forged by anyone.
+        const decoded = jsonwebtoken_1.default.verify(token, secret);
         req.user = {
-            id: 'usr_superadmin',
-            email: 'admin@firmitas.com',
-            name: 'Super Admin',
-            roleId: 'role_superadmin',
-            roleKey: 'super_admin',
-            permissions: {}
+            id: decoded.id,
+            email: decoded.email,
+            name: decoded.name,
+            roleId: decoded.roleId,
+            roleKey: decoded.roleKey,
+            permissions: decoded.permissions || {}
         };
         return next();
     }
-    const secret = process.env.JWT_SECRET || 'shreeraj_super_secret_jwt_key_2026';
-    try {
-        const decoded = jsonwebtoken_1.default.verify(token, secret);
-        req.user = decoded;
-        next();
-    }
-    catch (err) {
-        try {
-            const decoded = jsonwebtoken_1.default.decode(token);
-            if (decoded && decoded.email) {
-                req.user = decoded;
-                return next();
-            }
-        }
-        catch { }
+    catch {
         return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 };

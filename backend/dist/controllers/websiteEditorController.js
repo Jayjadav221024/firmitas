@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPublicPageContent = exports.revertSectionChanges = exports.publishSection = exports.saveSectionDraft = exports.getSiteStats = exports.getSectionsByPage = exports.getPages = void 0;
 const WebsiteEditor_js_1 = require("../models/WebsiteEditor.js");
 const auditService_js_1 = require("../services/auditService.js");
+const http_js_1 = require("../utils/http.js");
 const getPages = async (req, res) => {
     try {
         const pages = await WebsiteEditor_js_1.Page.find().sort({ displayOrder: 1 });
@@ -97,6 +98,8 @@ exports.getSiteStats = getSiteStats;
 const saveSectionDraft = async (req, res) => {
     try {
         const { sectionId } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, sectionId, 'Section schema'))
+            return;
         const { data } = req.body;
         const section = await WebsiteEditor_js_1.Section.findById(sectionId);
         if (!section)
@@ -142,6 +145,8 @@ exports.saveSectionDraft = saveSectionDraft;
 const publishSection = async (req, res) => {
     try {
         const { sectionId } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, sectionId, 'Section schema'))
+            return;
         const section = await WebsiteEditor_js_1.Section.findById(sectionId);
         if (!section)
             return res.status(404).json({ success: false, message: 'Section schema not found' });
@@ -172,6 +177,8 @@ exports.publishSection = publishSection;
 const revertSectionChanges = async (req, res) => {
     try {
         const { sectionId } = req.params;
+        if ((0, http_js_1.rejectInvalidId)(res, sectionId, 'Section'))
+            return;
         const section = await WebsiteEditor_js_1.Section.findById(sectionId);
         if (!section)
             return res.status(404).json({ success: false, message: 'Section not found' });

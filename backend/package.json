@@ -1,14 +1,16 @@
 {
-  "name": "shreeraj-traders-backend",
+  "name": "firmitas-backend",
   "version": "1.0.0",
-  "description": "Backend REST API with RBAC, Website Editor CMS, Email automation, and Media for Shreeraj Traders Admin Console",
+  "description": "Backend REST API with RBAC, Website Editor CMS, and Email automation for the Firmitas Admin Console",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "node dist/scripts/seed.js",
-    "seed:dev": "tsx src/scripts/seed.ts"
+    "seed:dev": "tsx src/scripts/seed.ts",
+    "import:catalog": "tsx src/scripts/importCatalog.ts",
+    "import:catalog:dry": "tsx src/scripts/importCatalog.ts --dry-run"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

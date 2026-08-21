@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { User, PermissionMatrix } from '../types';
+import { User } from '../types';
+import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../api/client';
 
 interface AuthState {
   user: User | null;
@@ -10,56 +11,45 @@ interface AuthState {
   hasPermission: (moduleName: string, action?: 'view' | 'create' | 'edit' | 'delete' | 'publish') => boolean;
 }
 
-// Default Super Admin for instant preview / offline demo
-const defaultSuperAdmin: User = {
-  id: 'usr_superadmin',
-  name: 'Super Admin',
-  email: 'admin@firmitas.com',
-  avatar: '',
-  roleId: 'role_superadmin',
-  roleName: 'Super Admin',
-  roleKey: 'super_admin',
-  permissions: {
-    dashboard: { view: true, create: true, edit: true, delete: true, publish: true },
-    users: { view: true, create: true, edit: true, delete: true, publish: true },
-    roles: { view: true, create: true, edit: true, delete: true, publish: true },
-    email_setup: { view: true, create: true, edit: true, delete: true, publish: true },
-    email_for: { view: true, create: true, edit: true, delete: true, publish: true },
-    email_template: { view: true, create: true, edit: true, delete: true, publish: true },
-    website_editor: { view: true, create: true, edit: true, delete: true, publish: true },
-    products: { view: true, create: true, edit: true, delete: true, publish: true },
-    categories: { view: true, create: true, edit: true, delete: true, publish: true },
-    testimonials: { view: true, create: true, edit: true, delete: true, publish: true },
-    faqs: { view: true, create: true, edit: true, delete: true, publish: true },
-    blogs: { view: true, create: true, edit: true, delete: true, publish: true },
-    inquiries: { view: true, create: true, edit: true, delete: true, publish: true },
-    job_openings: { view: true, create: true, edit: true, delete: true, publish: true },
-    job_applications: { view: true, create: true, edit: true, delete: true, publish: true }
+/**
+ * Restores a previous session from localStorage. Both the token and the user
+ * record must be present and parseable — a half-written session is treated as
+ * signed out rather than silently granting access.
+ */
+function restoreSession(): { user: User | null; token: string | null } {
+  try {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const rawUser = localStorage.getItem(USER_STORAGE_KEY);
+    if (!token || !rawUser) return { user: null, token: null };
+
+    const user = JSON.parse(rawUser) as User;
+    if (!user || !user.roleKey) return { user: null, token: null };
+
+    return { user, token };
+  } catch {
+    return { user: null, token: null };
   }
-};
+}
 
 export const useAuthStore = create<AuthState>((set, get) => {
-  const storedUser = localStorage.getItem('firmitas_user') || localStorage.getItem('shreeraj_user');
-  const storedToken = localStorage.getItem('firmitas_token') || localStorage.getItem('shreeraj_token');
+  const { user, token } = restoreSession();
 
   return {
-    user: storedUser ? JSON.parse(storedUser) : defaultSuperAdmin,
-    token: storedToken || 'mock_superadmin_token_2026',
-    isAuthenticated: true,
+    user,
+    token,
+    // Derived from a real token issued by the backend. It is never hardcoded
+    // to true — doing so let anybody open /admin without signing in.
+    isAuthenticated: Boolean(token && user),
 
     login: (token: string, user: User) => {
-      localStorage.setItem('firmitas_token', token);
-      localStorage.setItem('firmitas_user', JSON.stringify(user));
-      localStorage.removeItem('shreeraj_token');
-      localStorage.removeItem('shreeraj_user');
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       set({ token, user, isAuthenticated: true });
     },
 
     logout: () => {
-      localStorage.removeItem('firmitas_token');
-      localStorage.removeItem('firmitas_user');
-      localStorage.removeItem('shreeraj_token');
-      localStorage.removeItem('shreeraj_user');
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      localStorage.removeItem(USER_STORAGE_KEY);
       set({ token: null, user: null, isAuthenticated: false });
     },
 

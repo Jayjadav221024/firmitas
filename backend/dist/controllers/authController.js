@@ -7,8 +7,7 @@ exports.getMe = exports.login = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_js_1 = require("../models/User.js");
-const JWT_SECRET = process.env.JWT_SECRET || 'shreeraj_super_secret_jwt_key_2026';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'shreeraj_super_secret_refresh_jwt_key_2026';
+const auth_js_1 = require("../middleware/auth.js");
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -27,16 +26,19 @@ const login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
         const role = user.role;
+        if (!role) {
+            return res.status(403).json({ success: false, message: 'Account has no role assigned' });
+        }
         const tokenPayload = {
-            id: user._id,
+            id: String(user._id),
             email: user.email,
             name: user.name,
-            roleId: role._id,
+            roleId: String(role._id),
             roleKey: role.key,
             permissions: role.permissions
         };
-        const accessToken = jsonwebtoken_1.default.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' });
-        const refreshToken = jsonwebtoken_1.default.sign({ id: user._id }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+        const accessToken = jsonwebtoken_1.default.sign(tokenPayload, (0, auth_js_1.getJwtSecret)(), { expiresIn: '1d' });
+        const refreshToken = jsonwebtoken_1.default.sign({ id: String(user._id) }, (0, auth_js_1.getJwtRefreshSecret)(), { expiresIn: '7d' });
         user.refreshToken = refreshToken;
         await user.save();
         return res.json({

@@ -20,17 +20,20 @@ import {
 import { toast } from 'sonner';
 import { useUIStore, useAuthStore } from '../../store';
 
+// Tab order and labels are fixed by the site's information architecture; the
+// count badge next to each label is the real number of registered sections and
+// comes from GET /website-editor/pages.
 const TABS = [
-  { key: 'seo', label: 'SEO', count: 12 },
-  { key: 'site-wide', label: 'SITE-WIDE', count: 3 },
-  { key: 'home', label: 'HOME PAGE', count: 8 },
-  { key: 'about', label: 'ABOUT US', count: 6 },
-  { key: 'categories', label: 'CATEGORIES', count: 4 },
-  { key: 'products', label: 'PRODUCTS', count: 10 },
-  { key: 'why-choose-us', label: 'WHY CHOOSE US', count: 4 },
-  { key: 'compliance', label: 'COMPLIANCE', count: 4 },
-  { key: 'contact', label: 'CONTACT', count: 5 },
-  { key: 'enquiry', label: 'ENQUIRY / RFQ', count: 3 }
+  { key: 'seo', label: 'SEO' },
+  { key: 'site-wide', label: 'SITE-WIDE' },
+  { key: 'home', label: 'HOME PAGE' },
+  { key: 'about', label: 'ABOUT US' },
+  { key: 'categories', label: 'CATEGORIES' },
+  { key: 'products', label: 'PRODUCTS' },
+  { key: 'why-choose-us', label: 'WHY CHOOSE US' },
+  { key: 'compliance', label: 'COMPLIANCE' },
+  { key: 'contact', label: 'CONTACT' },
+  { key: 'enquiry', label: 'ENQUIRY / RFQ' }
 ];
 
 export const WebsiteEditorPage: React.FC = () => {
@@ -52,10 +55,19 @@ export const WebsiteEditorPage: React.FC = () => {
   });
 
   // Fetch overall site stats
-  const { data: siteStats = { totalSections: 52, editedSections: 1, summaryText: '1 of 52 sections across the site have been edited.' } } = useQuery({
+  const { data: siteStats = { totalSections: 0, editedSections: 0, summaryText: '' } } = useQuery({
     queryKey: ['website-stats'],
     queryFn: async () => await adminApi.getStats()
   });
+
+  // Real per-page section counts for the tab badges.
+  const { data: pages = [] } = useQuery({
+    queryKey: ['website-pages'],
+    queryFn: async () => await adminApi.getPages()
+  });
+
+  const sectionCountFor = (pageKey: string): number =>
+    pages.find((p: any) => p.key === pageKey)?.sectionCount ?? 0;
 
   // Save Draft Mutation
   const saveDraftMutation = useMutation({
@@ -69,7 +81,7 @@ export const WebsiteEditorPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['website-stats'] });
       sendIframeMessage('REFRESH_PREVIEW', {});
     },
-    onError: () => toast.error('Failed to save section draft')
+    onError: (e: any) => toast.error(e?.message || 'Failed to save section draft')
   });
 
   // Publish Section Mutation
@@ -82,7 +94,8 @@ export const WebsiteEditorPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['website-sections'] });
       queryClient.invalidateQueries({ queryKey: ['website-stats'] });
       sendIframeMessage('REFRESH_PREVIEW', {});
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to publish section')
   });
 
   // Revert Changes Mutation
@@ -95,7 +108,8 @@ export const WebsiteEditorPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['website-sections'] });
       queryClient.invalidateQueries({ queryKey: ['website-stats'] });
       sendIframeMessage('REFRESH_PREVIEW', {});
-    }
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to revert section')
   });
 
   // postMessage Bridge to iframe
@@ -165,7 +179,7 @@ export const WebsiteEditorPage: React.FC = () => {
                   isActive ? 'bg-teal-800/80 text-teal-100' : 'bg-slate-700/60 text-slate-300'
                 }`}
               >
-                {tab.count}
+                {sectionCountFor(tab.key)}
               </span>
             </button>
           );

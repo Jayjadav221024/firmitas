@@ -71,7 +71,7 @@ export const Blog = mongoose.model<IBlog>(
       slug: { type: String, required: true, unique: true },
       coverImage: { type: String, default: '' },
       body: { type: String, required: true },
-      author: { type: String, default: 'Shreeraj Editorial Team' },
+      author: { type: String, default: 'Firmitas Editorial Team' },
       tags: [{ type: String }],
       publishDate: { type: Date, default: Date.now },
       status: { type: String, enum: ['draft', 'published'], default: 'published' },
@@ -184,8 +184,8 @@ export const EmailSetup = mongoose.model<IEmailSetup>(
       secure: { type: Boolean, default: false },
       user: { type: String, default: '' },
       pass: { type: String, default: '' },
-      fromName: { type: String, default: 'Shreeraj Traders Admin' },
-      fromEmail: { type: String, default: 'info@shreerajtraders.com' },
+      fromName: { type: String, default: 'Firmitas Admin' },
+      fromEmail: { type: String, default: '' },
       isConfigured: { type: Boolean, default: false }
     },
     { timestamps: true }

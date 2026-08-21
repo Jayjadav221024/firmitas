@@ -80,7 +80,7 @@ export const ProductsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
     },
-    onError: () => toast.error('Failed to toggle status')
+    onError: (e: any) => toast.error(e?.message || 'Failed to toggle status')
   });
 
   // Save product mutation (Create / Update)
@@ -100,7 +100,7 @@ export const ProductsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
     },
-    onError: () => toast.error('Failed to save product')
+    onError: (e: any) => toast.error(e?.message || 'Failed to save product')
   });
 
   // Delete mutation
@@ -114,7 +114,7 @@ export const ProductsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['public-catalog-products'] });
     },
-    onError: () => toast.error('Failed to delete product')
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete product')
   });
 
   const handleOpenCreate = () => {

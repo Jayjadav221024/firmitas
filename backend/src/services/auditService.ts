@@ -12,7 +12,7 @@ export async function logAction(params: {
   try {
     await AuditLog.create({
       actor: params.actor || 'Super Admin',
-      actorEmail: params.actorEmail || 'admin@shreerajtraders.com',
+      actorEmail: params.actorEmail || '',
       action: params.action,
       module: params.module,
       targetId: params.targetId || '',

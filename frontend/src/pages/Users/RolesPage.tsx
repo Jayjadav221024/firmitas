@@ -67,7 +67,7 @@ export const RolesPage: React.FC = () => {
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: ['roles'] });
     },
-    onError: () => toast.error('Failed to save role')
+    onError: (e: any) => toast.error(e?.message || 'Failed to save role')
   });
 
   return (

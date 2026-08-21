@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Page, Section, SectionContent } from '../models/WebsiteEditor.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logAction } from '../services/auditService.js';
+import { rejectInvalidId } from '../utils/http.js';
 
 export const getPages = async (req: Request, res: Response) => {
   try {
@@ -101,6 +102,8 @@ export const getSiteStats = async (req: Request, res: Response) => {
 export const saveSectionDraft = async (req: AuthRequest, res: Response) => {
   try {
     const { sectionId } = req.params;
+    if (rejectInvalidId(res, sectionId, 'Section schema')) return;
+
     const { data } = req.body;
 
     const section = await Section.findById(sectionId);
@@ -148,6 +151,8 @@ export const saveSectionDraft = async (req: AuthRequest, res: Response) => {
 export const publishSection = async (req: AuthRequest, res: Response) => {
   try {
     const { sectionId } = req.params;
+    if (rejectInvalidId(res, sectionId, 'Section schema')) return;
+
     const section = await Section.findById(sectionId);
     if (!section) return res.status(404).json({ success: false, message: 'Section schema not found' });
 
@@ -179,6 +184,8 @@ export const publishSection = async (req: AuthRequest, res: Response) => {
 export const revertSectionChanges = async (req: AuthRequest, res: Response) => {
   try {
     const { sectionId } = req.params;
+    if (rejectInvalidId(res, sectionId, 'Section')) return;
+
     const section = await Section.findById(sectionId);
     if (!section) return res.status(404).json({ success: false, message: 'Section not found' });
 

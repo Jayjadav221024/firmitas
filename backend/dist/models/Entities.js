@@ -56,7 +56,7 @@ exports.Blog = mongoose_1.default.model('Blog', new mongoose_1.Schema({
     slug: { type: String, required: true, unique: true },
     coverImage: { type: String, default: '' },
     body: { type: String, required: true },
-    author: { type: String, default: 'Shreeraj Editorial Team' },
+    author: { type: String, default: 'Firmitas Editorial Team' },
     tags: [{ type: String }],
     publishDate: { type: Date, default: Date.now },
     status: { type: String, enum: ['draft', 'published'], default: 'published' },
@@ -98,8 +98,8 @@ exports.EmailSetup = mongoose_1.default.model('EmailSetup', new mongoose_1.Schem
     secure: { type: Boolean, default: false },
     user: { type: String, default: '' },
     pass: { type: String, default: '' },
-    fromName: { type: String, default: 'Shreeraj Traders Admin' },
-    fromEmail: { type: String, default: 'info@shreerajtraders.com' },
+    fromName: { type: String, default: 'Firmitas Admin' },
+    fromEmail: { type: String, default: '' },
     isConfigured: { type: Boolean, default: false }
 }, { timestamps: true }));
 exports.EmailMapping = mongoose_1.default.model('EmailMapping', new mongoose_1.Schema({

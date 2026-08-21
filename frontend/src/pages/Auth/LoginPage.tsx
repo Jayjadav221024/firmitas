@@ -41,58 +41,28 @@ export const LoginPage: React.FC = () => {
     setErrorMsg('');
 
     try {
-      // 1. Try real backend API
+      // The Firmitas backend is the only authority on credentials. There is no
+      // offline/demo fallback: a failed sign-in must stay failed, otherwise
+      // anyone knowing the placeholder password gets super admin access.
       const res = await api.post('/auth/login', { email, password });
-      if (res.data?.success && res.data?.accessToken) {
-        login(res.data.accessToken, res.data.user);
-        toast.success(`Welcome back, ${res.data.user.name || 'Admin'}!`);
-        const from = (location.state as any)?.from?.pathname || '/admin/products';
-        navigate(from, { replace: true });
+
+      if (!res.data?.success || !res.data?.accessToken) {
+        setErrorMsg(res.data?.message || 'Invalid email or password. Please try again.');
         return;
       }
+
+      login(res.data.accessToken, res.data.user);
+      toast.success(`Welcome back, ${res.data.user?.name || 'Admin'}!`);
+      const from = (location.state as any)?.from?.pathname || '/admin/products';
+      navigate(from, { replace: true });
     } catch (err: any) {
-      console.warn('Backend login failed, checking fallback credentials...', err?.response?.data?.message || err.message);
-
-      // Fallback check if backend is waking up or in offline demo mode
-      if (
-        (email.toLowerCase() === 'admin@firmitas.com' || email.toLowerCase() === 'admin@shreerajtraders.com') &&
-        (password === 'Admin@123' || password === 'Admin@12345')
-      ) {
-        const demoUser = {
-          id: 'usr_superadmin',
-          name: 'Super Admin',
-          email: email.toLowerCase(),
-          avatar: '',
-          roleId: 'role_superadmin',
-          roleName: 'Super Admin',
-          roleKey: 'super_admin',
-          permissions: {
-            dashboard: { view: true, create: true, edit: true, delete: true, publish: true },
-            users: { view: true, create: true, edit: true, delete: true, publish: true },
-            roles: { view: true, create: true, edit: true, delete: true, publish: true },
-            email_setup: { view: true, create: true, edit: true, delete: true, publish: true },
-            email_for: { view: true, create: true, edit: true, delete: true, publish: true },
-            email_template: { view: true, create: true, edit: true, delete: true, publish: true },
-            website_editor: { view: true, create: true, edit: true, delete: true, publish: true },
-            products: { view: true, create: true, edit: true, delete: true, publish: true },
-            categories: { view: true, create: true, edit: true, delete: true, publish: true },
-            testimonials: { view: true, create: true, edit: true, delete: true, publish: true },
-            faqs: { view: true, create: true, edit: true, delete: true, publish: true },
-            blogs: { view: true, create: true, edit: true, delete: true, publish: true },
-            inquiries: { view: true, create: true, edit: true, delete: true, publish: true },
-            job_openings: { view: true, create: true, edit: true, delete: true, publish: true },
-            job_applications: { view: true, create: true, edit: true, delete: true, publish: true }
-          }
-        };
-
-        login('token_demo_superadmin_' + Date.now(), demoUser);
-        toast.success('Logged in as Super Admin');
-        const from = (location.state as any)?.from?.pathname || '/admin/products';
-        navigate(from, { replace: true });
-        return;
+      if (err?.code === 'ECONNABORTED') {
+        setErrorMsg('The server took too long to respond. It may be waking up — please try again.');
+      } else if (err?.code === 'ERR_NETWORK') {
+        setErrorMsg('Cannot reach the server. Please check that the backend is running.');
+      } else {
+        setErrorMsg(err?.response?.data?.message || 'Invalid email or password. Please try again.');
       }
-
-      setErrorMsg(err?.response?.data?.message || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }

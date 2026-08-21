@@ -4,6 +4,7 @@ import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logAction } from '../services/auditService.js';
+import { rejectInvalidId } from '../utils/http.js';
 
 // Roles
 export const getRoles = async (req: Request, res: Response) => {
@@ -45,6 +46,8 @@ export const createRole = async (req: AuthRequest, res: Response) => {
 export const updateRole = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (rejectInvalidId(res, id, 'Role')) return;
+
     const { name, description, permissions } = req.body;
 
     const role = await Role.findById(id);
@@ -76,6 +79,8 @@ export const updateRole = async (req: AuthRequest, res: Response) => {
 export const deleteRole = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (rejectInvalidId(res, id, 'Role')) return;
+
     const role = await Role.findById(id);
     if (!role) return res.status(404).json({ success: false, message: 'Role not found' });
     if (role.isSystem) {
@@ -113,11 +118,21 @@ export const getUsers = async (req: Request, res: Response) => {
 export const createUser = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password, roleId, isActive } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required' });
+    }
+    if (!password) {
+      return res.status(400).json({ success: false, message: 'Password is required' });
+    }
+    if (!roleId || !(await Role.exists({ _id: roleId }).catch(() => null))) {
+      return res.status(400).json({ success: false, message: 'A valid role must be selected' });
+    }
+
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) return res.status(400).json({ success: false, message: 'Email already registered' });
 
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password || 'Admin@12345', salt);
+    const passwordHash = await bcrypt.hash(password, salt);
 
     const user = await User.create({
       name,
@@ -144,10 +159,16 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 export const updateUser = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (rejectInvalidId(res, id, 'User')) return;
+
     const { name, roleId, isActive, password } = req.body;
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (roleId && !(await Role.exists({ _id: roleId }).catch(() => null))) {
+      return res.status(400).json({ success: false, message: 'A valid role must be selected' });
+    }
 
     if (name) user.name = name;
     if (roleId) user.role = roleId;
@@ -175,7 +196,15 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    await User.findByIdAndDelete(id);
+    if (rejectInvalidId(res, id, 'User')) return;
+
+    // Don't let an admin delete the account they are signed in with.
+    if (req.user?.id === id) {
+      return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
+    }
+
+    const deleted = await User.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'User not found' });
     return res.json({ success: true, message: 'User deleted' });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });

@@ -2,10 +2,11 @@ import { Request, Response } from 'express';
 import { Product } from '../models/Product.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logAction } from '../services/auditService.js';
+import { rejectInvalidId, slugify } from '../utils/http.js';
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const { search, category, brand, status, page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'asc' } = req.query;
+    const { search, category, brand, status, page = 1, limit = 200, sortBy, sortOrder = 'asc' } = req.query;
 
     const query: any = {};
     if (search) {
@@ -13,10 +14,11 @@ export const getProducts = async (req: Request, res: Response) => {
         { name: { $regex: search, $options: 'i' } },
         { brandName: { $regex: search, $options: 'i' } },
         { categoryKey: { $regex: search, $options: 'i' } },
+        { composition: { $regex: search, $options: 'i' } },
         { slug: { $regex: search, $options: 'i' } }
       ];
     }
-    if (category) query.categoryKey = category;
+    if (category && category !== 'all') query.categoryKey = category;
     if (brand) query.brandName = brand;
     if (status) query.status = status;
 
@@ -24,8 +26,9 @@ export const getProducts = async (req: Request, res: Response) => {
     const limitNum = parseInt(limit as string, 10);
     const skip = (pageNum - 1) * limitNum;
 
-    const sortOption: any = {};
-    sortOption[sortBy as string] = sortOrder === 'desc' ? -1 : 1;
+    const sortOption: any = sortBy
+      ? { [sortBy as string]: sortOrder === 'desc' ? -1 : 1 }
+      : { srNo: 1, createdAt: 1 };
 
     const [products, total] = await Promise.all([
       Product.find(query).sort(sortOption).skip(skip).limit(limitNum),
@@ -74,6 +77,7 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
+    if (rejectInvalidId(res, req.params.id, 'Product')) return;
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     return res.json({ success: true, data: product });
@@ -104,8 +108,19 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
       metaDescription
     } = req.body;
 
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ success: false, message: 'Product name is required' });
+    }
+
     const catKey = (categoryKey || category || 'ethical').toLowerCase().trim();
-    const cleanSlug = (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) + '-' + Math.floor(Math.random() * 1000);
+
+    // Use the slug the admin actually typed. The previous version appended a
+    // random number to every slug, so the saved URL never matched the form.
+    const cleanSlug = slugify(slug || name);
+    if (!cleanSlug) {
+      return res.status(400).json({ success: false, message: 'Could not derive a slug from the product name' });
+    }
+
     const existing = await Product.findOne({ slug: cleanSlug });
     if (existing) {
       return res.status(400).json({ success: false, message: `Product slug '${cleanSlug}' already exists` });
@@ -150,16 +165,33 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
 export const updateProduct = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    if (rejectInvalidId(res, id, 'Product')) return;
+
+    const updates = { ...req.body };
+
+    // Never let the client rewrite identity/bookkeeping fields.
+    delete updates._id;
+    delete updates.id;
+    delete updates.createdAt;
+    delete updates.updatedAt;
+
+    if (updates.category && !updates.categoryKey) {
+      updates.categoryKey = updates.category;
+    }
+    delete updates.category;
+    if (updates.categoryKey) {
+      updates.categoryKey = String(updates.categoryKey).toLowerCase().trim();
+    }
 
     if (updates.slug) {
+      updates.slug = slugify(updates.slug);
       const existing = await Product.findOne({ slug: updates.slug, _id: { $ne: id } });
       if (existing) {
         return res.status(400).json({ success: false, message: `Product slug '${updates.slug}' already in use` });
       }
     }
 
-    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
     await logAction({
@@ -181,6 +213,8 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
 export const toggleProductStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (rejectInvalidId(res, id, 'Product')) return;
+
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
@@ -205,6 +239,8 @@ export const toggleProductStatus = async (req: AuthRequest, res: Response) => {
 export const deleteProduct = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (rejectInvalidId(res, id, 'Product')) return;
+
     const product = await Product.findByIdAndDelete(id);
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
